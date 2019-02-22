@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 
 namespace Tp1_Reseaux
 {
-    class Grille
+    public class Position
     {
-        private int WIDTH = 0;
-        private int m_height;
+        public int X { get; }
+        public int Y { get; }
 
-        public Grille()
+        public Position(int x, int y)
         {
-          
+            X = x - 1;
+            Y = y - 1;
         }
-
 
     }
 }
