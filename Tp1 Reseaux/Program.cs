@@ -1,15 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Timers;
 
 namespace Tp1_Reseaux
 {
 	class Program
 	{
-		static void Main(string[] args)
+
+		static void Main()
 		{
+			new Program().Principal();
+		}
+
+		private void Principal()
+		{
+			Game game = Game.GetInstance();
+
+			game.Setup();
+
+			if (!game.Start())
+				Console.WriteLine("Cant start the game.");
+			
 		}
 	}
 }
