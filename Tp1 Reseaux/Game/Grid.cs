@@ -1,53 +1,75 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using static System.Console;
-
 
 namespace Tp1_Reseaux
 {
 	/// <summary>
-	/// On veut enlever tout les affichages dans la classe pour 
-	/// la rendre independante du frontend utiliser (dans notre cas une console).
-	/// Les positions devront etre conserver dans les bateaux et non
-	/// une liste directement dans la grille. La liste representant la 
-	/// grille est maintenant un dictionnaire, plus simple et pratique.
-	/// Il faut voir la classe comme etant un object que l'on vas utiliser
-	/// de lexterieur de celle-ci.
+	/// Exception used to signify that content of the grid cell 
+	/// is unknown.
+	/// </summary>
+	public class UnknownGridCellException : Exception
+	{
+		public UnknownGridCellException() { }
+	}
+
+	/// <summary>
+	/// Class used to handle the grid for the game
 	/// </summary>
 	public sealed class Grid
     {
+		//Size of the grid
         public static readonly int GridSize = 10;
+
+		//Horizontal scale of the grid. Used for parsing and displaying
         public static readonly char[] GridHorizontalScale = new char[]{ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'};
 
+		//Contains the all the grid data for the class
 		private Dictionary<Position, object> GridTable = new Dictionary<Position, object>();
 
-		public static Grid Instance = null;
+		//Contain the instance of the singleton class
+		private static Grid Instance = null;
 
-		public static Grid GetInstance() => (Instance is null) ? new Grid() : Instance;
-
+		/// <summary>
+		/// Private Constructor that initiate a grid
+		/// </summary>
 		private Grid(){
 			Init();
 		}
 
+		/// <summary>
+		/// Method used to obtain the instance of the singleton class
+		/// </summary>
+		/// <returns></returns>
+		public static Grid GetInstance() => (Instance is null) ? new Grid() : Instance;
+
+		/// <summary>
+		/// Method used to iniate a grid with null value 
+		/// that represent an empty grid cell.
+		/// </summary>
 		private void Init()
 		{
 			for(int y = 0; y < GridSize; y++)
 			{
 				for(int x = 0; x < GridSize ; x++)
 				{
-					GridTable.Add(Position.Create(x, y), null);
+					GridTable.Add(new Position(x, y), null);
 				}
 			}
 		}
 
-		private bool AddBoat(BoatType type,  Position start, Position end)
+		/// <summary>
+		/// Method used to add a boat inside the playable grid
+		/// </summary>
+		/// <param name="boat">Boat to add</param>
+		/// <param name="start">Starting position of the boat</param>
+		/// <param name="end">Ending position of the boat</param>
+		/// <returns></returns>
+		public bool AddBoat(Boat boat,  Position start, Position end)
 		{
-			Boat boat = new Boat(type);
-
 			int? difference = start.Difference(end);
 
-			if (difference != boat.NbVies)
+			if (difference != boat.LifePoints)
 				return false;
 
 			Position startingPoint = Position.GetClosestPosition(start, end);
@@ -66,7 +88,12 @@ namespace Tp1_Reseaux
 			return true;
 		}
 
-		public bool AddShot(Position shot)
+		/// <summary>
+		/// Method used to make a shot in the playable grid.
+		/// </summary>
+		/// <param name="shot">Position of the shot</param>
+		/// <returns></returns>
+		public void AddShot(Position shot)
 		{
 			Position key = GridTable.Keys.First(p => p.Equals(shot));
 
@@ -76,21 +103,18 @@ namespace Tp1_Reseaux
 			if(result is Boat)
 			{
 				Boat boat = (Boat)result;
-				boat.NbVies = boat.NbVies - 1;
+				boat.LifePoints = boat.LifePoints - 1;
 			}
 
-			//A repenser
 			GridTable[key] = new Shot(key);
-
-			return true;
 		}
 
+		/// <summary>
+		/// Method used to get the string representation of the current Grid
+		/// </summary>
+		/// <returns></returns>
 		public override string ToString()
 		{
-			//----Utiliser pour tester----// // 1 , 0
-			AddBoat(BoatType.AircraftCarrier , Position.Create("B1"), Position.Create(6, 0));
-			AddShot(Position.Create(2,0));
-
 			string gridRepresentation = "";
 			int startingPoint = 0;
 
@@ -109,8 +133,10 @@ namespace Tp1_Reseaux
 					gridRepresentation += ".";
 				else if (currentGridCell is Boat)
 					gridRepresentation += "O";
-				else if(currentGridCell is Shot)
+				else if (currentGridCell is Shot)
 					gridRepresentation += "X";
+				else
+					throw new UnknownGridCellException();
 			}
 			return gridRepresentation;
 		}

@@ -8,9 +8,15 @@ namespace Tp1_Reseaux
 {
 	public sealed class Game
 	{
-		private static readonly string DEFAULT_IP = "127.0.0.1";
-		private static readonly int DEFAULT_PORT = 8888;
+		//Default ip adress used if no ip adress is provided by the user
+		public static readonly string DEFAULT_IP = "127.0.0.1";
 
+		//Default port number used if no port number is provided by the user
+		public static readonly int DEFAULT_PORT = 8888;
+
+		/// <summary>
+		/// Enumeration for the different a state can be in
+		/// </summary>
 		public enum GameState
 		{
 			Setup,
@@ -24,22 +30,41 @@ namespace Tp1_Reseaux
 			Waiting
 		}
 
+		//Contains the client instance used for communication with the server
 		private Client Client = Client.GetInstance();
 
+		//Return the player that was assigned by the server
 		public string CurrentPlayer => (Client.PlayerAssigned != 0)? "Joueur" + Client.PlayerAssigned: "Non-disponible";
+
+		//Contains the current ip used for the connection by the client
 		public string CurrentIp { get; private set; }
+
+		//Contains the current port used for the connection by the client
 		public int CurrentPort { get; private set; }
+
+		//Contains the current state of the game
 		public GameState CurrentState { get; private set; }
 
+		//Contains the current instance of the class
 		private static Game Instance = null;
 
+		/// <summary>
+		/// Method used to obtain the instance of the game
+		/// </summary>
+		/// <returns></returns>
 		public static Game GetInstance() => (Instance is null) ? Instance = new Game() : Instance;
 
+		/// <summary>
+		/// Private constructor for initiating a new game
+		/// </summary>
 		private Game() {
-			CurrentIp = String.Empty;
+			CurrentIp = string.Empty;
 			CurrentPort = default(int);
 		}
 
+		/// <summary>
+		/// Method used to retrieve the ip adress from the user
+		/// </summary>
 		private void GetIpAdress()
 		{
 			Console.Write("Enter the IP Adress : ");
@@ -52,6 +77,9 @@ namespace Tp1_Reseaux
 			}
 		}
 
+		/// <summary>
+		/// Method used to retireve the port number from the user
+		/// </summary>
 		private void GetPortNumber()
 		{
 			Console.Write("Enter the Port Number: ");
@@ -67,6 +95,9 @@ namespace Tp1_Reseaux
 				CurrentPort = portNumber;
 		}
 
+		/// <summary>
+		/// Method that display the launch message in the console
+		/// </summary>
 		private void DisplayLaunchMessage()
 		{
 			CurrentState = GameState.Launching;
@@ -80,6 +111,9 @@ namespace Tp1_Reseaux
 			Console.Clear();
 		}
 
+		/// <summary>
+		/// Method used that initiate the setup for starting the game.
+		/// </summary>
 		public void Setup()
 		{
 			CurrentState = GameState.Setup;
@@ -101,6 +135,10 @@ namespace Tp1_Reseaux
 			}
 		}
 
+		/// <summary>
+		/// Method that start the game.
+		/// </summary>
+		/// <returns>True if the game successfully started</returns>
 		public bool Start()
 		{
 			if (Client.IsOpen && CurrentState == GameState.Ready)
@@ -114,6 +152,10 @@ namespace Tp1_Reseaux
 			return false;
 		}
 
+		/// <summary>
+		/// Method used for handling the logic for
+		/// playing the game.
+		/// </summary>
 		private void Play()
 		{
 			while (Client.IsOpen)
@@ -129,6 +171,9 @@ namespace Tp1_Reseaux
 			}
 		}
 
+		/// <summary>
+		/// Method used to place boat for the game.
+		/// </summary>
 		private void PlaceBoat()
 		{
 			Grid grid = Grid.GetInstance();
@@ -138,6 +183,9 @@ namespace Tp1_Reseaux
 			Console.ReadLine();
 		}
 
+		/// <summary>
+		/// Method used to handle the logic for sending shot.
+		/// </summary>
 		private void PlaceShot()
 		{
 			string shotPosition = Console.ReadLine();
