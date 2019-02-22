@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace Tp1_Reseaux
 {
+	/// <summary>
+	/// La classe bateau pourrait possiblement etre une interface.
+	/// Ceci enleverait le besoin de overrider toute les propriete
+	/// qui ne fait pas vraiment de sens du point de vue structurelle.
+	/// A revoir
+	/// </summary>
     public abstract class Boat 
     {
         public abstract string Name { get; }
