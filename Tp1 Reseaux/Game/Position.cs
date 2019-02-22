@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace Tp1_Reseaux
 {
+	public enum PositionFlow
+	{
+		Horizontal,
+		Vertical
+	}
+
 	/// <summary>
 	/// La classe position contiendras TOUTE la logique pour
 	/// determiner si une position est valide ou non. Elle leveras
@@ -15,39 +21,82 @@ namespace Tp1_Reseaux
 	/// </summary>
     public class Position
     {
-        public int X { get; }
-        public int Y { get; }
+        public int X { get; private set; }
+        public int Y { get; private set; }
 
-        public Position(int x, int y)
+		public PositionFlow Flow { get; set; }
+
+		public Position(int x, int y)
         {
-            X = x;
+			//Verification a faire
+			X = x;
             Y = y;
         }
 
-		//private static bool ValidatePosition(string position, out Position positionValidated)
-		//{
-			//positionValidated = null;
+		public Position(string position)
+		{
+			throw new NotImplementedException();
+		}
 
-			//if (!int.TryParse(position.Substring(1), out int secondPart))
-			//{
-			//	return false;
-			//}
+		public void Assign(int x, int y)
+		{
+			X = x;
+			Y = y;
+		}
 
-			//if (!validChar.Contains(position[0]))
-			//{
-			//	WriteLine("Veuillez respecter l'intervalle A - J");
-			//	return false;
-			//}
+		public int? Difference(Position second)
+		{
+			if (X == second.X && Y != second.Y)
+			{
+				Flow = PositionFlow.Vertical;
+				second.Flow = PositionFlow.Vertical;
+				return Math.Abs(Y - second.Y);
+			}
+			else if (Y == second.Y && X != second.X)
+			{
+				Flow = PositionFlow.Horizontal;
+				second.Flow = PositionFlow.Horizontal;
+				return Math.Abs(X - second.X);
+			}
+			else
+				return null;
+		}
 
-			//if (secondPart < 1 || secondPart > 10)
-			//{
-			//	WriteLine("Veuillez respecter l'intervalle 1 - 10");
-			//	return false;
-			//}
 
-			//positionValidated = new Position(validChar.IndexOf(position[0]) + 1, secondPart + 1);
+		public static bool PositionWithinBound()
+		{
+			throw new NotImplementedException();
+		}
 
-			//return true;
-		//}
+		public static Position ParseTextualToXY(string position)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override int GetHashCode()
+		{
+			return X * 31 + Y * 31;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (!(obj is Position))
+				return false;
+
+			Position position = (Position)obj;
+
+			return Y == position.Y && X == position.X;
+		}
+
+		public static Position GetClosestPosition(Position start, Position end)
+		{
+			int distanceStart = start.X + start.Y;
+			int distanceEnd = end.X + end.Y;
+
+			if (distanceStart < distanceEnd)
+				return start;
+			else
+				return end;
+		}
 	}
 }

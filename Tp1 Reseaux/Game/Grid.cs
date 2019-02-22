@@ -17,21 +17,11 @@ namespace Tp1_Reseaux
 	/// </summary>
 	public sealed class Grid
     {
-		public enum GridCell
-		{
-			Empty,
-			Boat,
-			Shot
-		}
-
         private static readonly int GridSize = 10;
         private static readonly char[] GridHorizontalScale = new char[]{ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'};
 
-		private Dictionary<Position, GridCell> GridTable = new Dictionary<Position, GridCell>();
+		private Dictionary<Position, object> GridTable = new Dictionary<Position, object>();
 
-        public List<Boat> Boats { get; private set; }
-
-		//Singleton Class
 		public static Grid Instance = null;
 
 		public static Grid GetInstance() => (Instance is null) ? new Grid() : Instance;
@@ -46,96 +36,67 @@ namespace Tp1_Reseaux
 			{
 				for(int x = 0; x < GridSize ; x++)
 				{
-					GridTable.Add(new Position(x, y), GridCell.Empty);
+					GridTable.Add(new Position(x, y), null);
 				}
 			}
 		}
 
-		//private void AddAllBoats()
-		//{
-		//    Boats = new List<Boat>() { new AircraftCarrier() /**, new Cruiser(),
-		//        new CounterTorpedo(), new SubMarine(), new Torpedo() */ };
-
-		//    foreach (var boat in allBoats)
-		//    {
-		//        WriteLine($"--- Coordonnées de votre {boat.Name} ---");
-
-		//        bool positionStartValid = false;
-		//        bool positionEndValid = false;
-		//        string positionStart = "";
-		//        string positionEnd = "";
-
-		//        Position positionStartValidated = null;
-		//        Position positionEndValidated = null;
-
-		//        bool allValid = false;
-
-		//        while (!allValid)
-		//        {
-
-		//            while (!positionStartValid)
-		//            {
-		//                WriteLine("Veuillez entrer la position de début");
-		//                positionStart = ReadLine().ToLower();
-
-		//                positionStartValid = ValidatePosition(positionStart, out positionStartValidated/*, null, boat*/);
-		//            }
-
-		//            while (!positionEndValid)
-		//            {
-		//                WriteLine("Veuillez entrer la position de fin");
-		//                positionEnd = ReadLine().ToLower();
-
-		//                positionEndValid = ValidatePosition(positionEnd, out positionEndValidated/*, positionStart, boat*/);
-		//            }
-
-		//            if (positionStartValidated.X == positionEndValidated.X && positionStartValidated.Y != positionEndValidated.Y)
-		//            {
-		//                if (Math.Abs(positionStartValidated.Y - positionEndValidated.Y) + 1 != boat.Length)
-		//                {
-		//                    positionStartValid = false;
-		//                    positionEndValid = false;
-		//                    WriteLine("Bateau de mauvaise longueur");
-		//                }
-		//                else
-		//                    allValid = true;
-		//            }
-
-		//            if (positionStartValidated.Y == positionEndValidated.Y && positionStartValidated.X != positionEndValidated.X)
-		//            {
-		//                if (Math.Abs(positionStartValidated.X - positionEndValidated.X) + 1 != boat.Length)
-		//                {
-		//                    positionStartValid = false;
-		//                    positionEndValid = false;
-		//                    WriteLine("Bateau de mauvaise longueur");
-		//                }
-		//                else
-		//                    allValid = true;
-		//            }
-		//        }
-		//        AddBoat(positionStartValidated, positionEndValidated);
-		//        boat.IsPlaced = true;
-		//    }
-		//}
-
-		private void AddBoat(Position start, Position end)
+		private bool AddBoat(BoatType type,  Position start, Position end)
 		{
-			Position key1 = GridTable.Keys.First(g => g.X == start.X && g.Y == start.Y);
-			Position key2 = GridTable.Keys.First(g => g.X == end.X && g.Y == end.Y);
-			GridTable[key1] = GridCell.Boat;
-			GridTable[key2] = GridCell.Boat;
+			Boat boat = new Boat(type);
+
+			int? difference = start.Difference(end);
+
+			if ((int)difference != boat.NbVies)
+				return false;
+
+			Position startingPoint = Position.GetClosestPosition(start, end);
+
+			for(int i = 0; i < difference ; i++)
+			{
+				Position key = GridTable.Keys.First(p => p.Equals(startingPoint));
+				GridTable[key] = boat;
+
+				if (startingPoint.Flow == PositionFlow.Horizontal)
+					startingPoint.Assign(startingPoint.X + 1, startingPoint.Y);
+				else
+					startingPoint.Assign(startingPoint.X, startingPoint.Y + 1);
+			}
+
+			return true;
+		}
+
+		public bool AddShot(Position shot)
+		{
+			Position key = GridTable.Keys.First(p => p.Equals(shot));
+
+			object result;
+			GridTable.TryGetValue(key , out result);
+
+			if(result is Boat)
+			{
+				Boat boat = (Boat)result;
+				boat.NbVies = boat.NbVies - 1;
+			}
+
+			//A repenser
+			GridTable[key] = new Shot(key);
+
+			return true;
 		}
 
 		public override string ToString()
 		{
-			//Utiliser pour tester
-			AddBoat(new Position(1, 1), new Position(3, 6));
+			//----Utiliser pour tester----//
+			AddBoat(BoatType.AircraftCarrier ,new Position(1, 0), new Position(6, 0));
+			AddShot(new Position(2, 0));
 
 			string gridRepresentation = "";
 			int startingPoint = 0;
-			foreach(KeyValuePair<Position, GridCell> keyValuePair in GridTable)
+
+			foreach(KeyValuePair<Position, object> keyValuePair in GridTable)
 			{
-				GridCell currentGridCell = keyValuePair.Value;
+				object currentGridCell = keyValuePair.Value;
 				Position currentPosition = keyValuePair.Key;
 
 				if(currentPosition.Y != startingPoint)
@@ -144,11 +105,11 @@ namespace Tp1_Reseaux
 					startingPoint = currentPosition.Y;
 				}
 
-				if (currentGridCell == GridCell.Boat)
-					gridRepresentation += "O";
-				else if (currentGridCell == GridCell.Empty)
+				if (currentGridCell is null)
 					gridRepresentation += ".";
-				else if (currentGridCell == GridCell.Shot)
+				else if (currentGridCell is Boat)
+					gridRepresentation += "O";
+				else if(currentGridCell is Shot)
 					gridRepresentation += "X";
 			}
 			return gridRepresentation;

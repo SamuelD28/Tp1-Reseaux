@@ -131,7 +131,11 @@ namespace Tp1_Reseaux
 
 		private void PlaceBoat()
 		{
-			//Start the placement of boats
+			Grid grid = Grid.GetInstance();
+
+			Console.Write(grid.ToString());
+
+			Console.ReadLine();
 		}
 
 		private void PlaceShot()
