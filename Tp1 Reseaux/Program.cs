@@ -11,15 +11,15 @@ namespace Tp1_Reseaux
     {
         static void Main(string[] args)
         {
-			Game game = Game.GetInstance();
+            //Game game = Game.GetInstance();
 
-			game.Setup();
+            //game.Setup();
 
-			game.Start();
+            //game.Start();
 
-			//Grid GameGrid = Grid.GetInstance();
+            Grid GameGrid = Grid.GetInstance();
 
-			//Console.Write(GameGrid.ToString());
+            Console.Write(GameGrid.ToString());
         }
     }
 }

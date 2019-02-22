@@ -17,8 +17,8 @@ namespace Tp1_Reseaux
 	/// </summary>
 	public sealed class Grid
     {
-        private static readonly int GridSize = 10;
-        private static readonly char[] GridHorizontalScale = new char[]{ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'};
+        public static readonly int GridSize = 10;
+        public static readonly char[] GridHorizontalScale = new char[]{ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'};
 
 		private Dictionary<Position, object> GridTable = new Dictionary<Position, object>();
 
@@ -36,7 +36,7 @@ namespace Tp1_Reseaux
 			{
 				for(int x = 0; x < GridSize ; x++)
 				{
-					GridTable.Add(new Position(x, y), null);
+					GridTable.Add(Position.Create(x, y), null);
 				}
 			}
 		}
@@ -47,7 +47,7 @@ namespace Tp1_Reseaux
 
 			int? difference = start.Difference(end);
 
-			if ((int)difference != boat.NbVies)
+			if (difference != boat.NbVies)
 				return false;
 
 			Position startingPoint = Position.GetClosestPosition(start, end);
@@ -87,9 +87,9 @@ namespace Tp1_Reseaux
 
 		public override string ToString()
 		{
-			//----Utiliser pour tester----//
-			AddBoat(BoatType.AircraftCarrier ,new Position(1, 0), new Position(6, 0));
-			AddShot(new Position(2, 0));
+			//----Utiliser pour tester----// // 1 , 0
+			AddBoat(BoatType.AircraftCarrier , Position.Create("B1"), Position.Create(6, 0));
+			AddShot(Position.Create(2,0));
 
 			string gridRepresentation = "";
 			int startingPoint = 0;
