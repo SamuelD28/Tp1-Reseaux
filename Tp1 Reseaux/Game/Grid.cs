@@ -53,7 +53,7 @@ namespace Tp1_Reseaux
 			{
 				for(int x = 0; x < GridSize ; x++)
 				{
-					GridTable.Add(new Position(x, y), null);
+					GridTable.Add(Position.Create(x, y), null);
 				}
 			}
 		}
@@ -84,7 +84,7 @@ namespace Tp1_Reseaux
 				else
 					startingPoint.Assign(startingPoint.X, startingPoint.Y + 1);
 			}
-
+            boat.IsPlaced = true;
 			return true;
 		}
 

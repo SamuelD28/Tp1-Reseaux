@@ -11,11 +11,11 @@ namespace Tp1_Reseaux
     {
         static void Main(string[] args)
         {
-            //Game game = Game.GetInstance();
+            Game game = Game.GetInstance();
 
-            //game.Setup();
+            game.Setup();
 
-            //game.Start();
+            game.Start();
 
             Grid GameGrid = Grid.GetInstance();
 
