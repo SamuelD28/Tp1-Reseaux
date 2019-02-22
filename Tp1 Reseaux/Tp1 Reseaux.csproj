@@ -43,16 +43,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Boat.cs" />
-    <Compile Include="CounterTorpedo.cs" />
-    <Compile Include="Cruiser.cs" />
-    <Compile Include="Grid.cs" />
-    <Compile Include="AircraftCarrier.cs" />
-    <Compile Include="Position.cs" />
+    <Compile Include="Boats\Boat.cs" />
+    <Compile Include="Boats\CounterTorpedo.cs" />
+    <Compile Include="Boats\Cruiser.cs" />
+    <Compile Include="Game\Game.cs" />
+    <Compile Include="Network\Client.cs" />
+    <Compile Include="Network\PlaceBoat.cs" />
+    <Compile Include="Network\PlaceShot.cs" />
+    <Compile Include="Network\Request.cs" />
+    <Compile Include="Game\Grid.cs" />
+    <Compile Include="Boats\AircraftCarrier.cs" />
+    <Compile Include="Game\Position.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SubMarine.cs" />
-    <Compile Include="Torpedo.cs" />
+    <Compile Include="Boats\SubMarine.cs" />
+    <Compile Include="Boats\Torpedo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
