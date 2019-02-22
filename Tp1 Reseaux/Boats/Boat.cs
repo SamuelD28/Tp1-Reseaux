@@ -37,6 +37,7 @@
 		public Boat(BoatType type)
 		{
 			IsPlaced = false;
+            Type = type;
 			switch (type)
 			{
 				case BoatType.Torpedo: LifePoints = 3; break;

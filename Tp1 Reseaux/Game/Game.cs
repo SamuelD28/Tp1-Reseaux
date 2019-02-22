@@ -188,7 +188,7 @@ namespace Tp1_Reseaux
             {
                 WriteLine(GameGrid.ToString());
                 Boat boat = Boats.Find(b => !b.IsPlaced);
-                WriteLine($"{Enum.GetName(typeof(BoatType), boat.Type)} Longeur : {boat.LifePoints}");
+                WriteLine($"{boat.Type.ToString()} Longeur : {boat.LifePoints}");
                 GameGrid.AddBoat(boat, GetPosition(), GetPosition());
             }
         }
