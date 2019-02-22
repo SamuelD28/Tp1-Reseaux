@@ -6,11 +6,11 @@
 	/// </summary>
 	public enum BoatType
 	{
-		Torpedo = 3,
-		Submarine = 3,
-		CounterTorpedo = 2,
-		AircraftCarrier = 5,
-		Destroyer= 4
+		Torpedo,
+		Submarine,
+		CounterTorpedo,
+		AircraftCarrier,
+		Destroyer
 	}
 
 	/// <summary>
@@ -37,7 +37,14 @@
 		public Boat(BoatType type)
 		{
 			IsPlaced = false;
-			LifePoints = (int)type;
+			switch (type)
+			{
+				case BoatType.Torpedo: LifePoints = 3; break;
+				case BoatType.Submarine: LifePoints = 3; break;
+				case BoatType.CounterTorpedo: LifePoints = 2; break;
+				case BoatType.AircraftCarrier: LifePoints = 5; break;
+				case BoatType.Destroyer: LifePoints = 4; break;
+			}
 		}
 	}
 }
