@@ -47,9 +47,7 @@ namespace Tp1_Reseaux
             int[] values = ParseTextualToXY(position.ToUpper());
 
             if (!PositionWithinBound(values[0], values[1]))
-            {
                 return null;
-            }
 
             return new Position(values[0], values[1]);
         }
@@ -66,17 +64,24 @@ namespace Tp1_Reseaux
             {
                 Flow = PositionFlow.Vertical;
                 second.Flow = PositionFlow.Vertical;
-                return Math.Abs(Y - second.Y);
+                return Math.Abs(Y - second.Y) + 1; //We add one to account for the first position not beeing included
             }
             else if (Y == second.Y && X != second.X)
             {
                 Flow = PositionFlow.Horizontal;
                 second.Flow = PositionFlow.Horizontal;
-                return Math.Abs(X - second.X);
-            }
+                return Math.Abs(X - second.X) + 1; //We add one to account for the first position not beeing included
+			}
             else
                 return null;
         }
+
+		public Position Clone()
+		{
+			Position clone = new Position(X, Y);
+			clone.Flow = Flow;
+			return clone;
+		}
 
         public static bool PositionWithinBound(int x, int y)
         {
@@ -89,11 +94,18 @@ namespace Tp1_Reseaux
 
         public static int[] ParseTextualToXY(string position)
         {
+			string trimmed = position.Replace(" ", String.Empty);
+
+			if (trimmed.Length < 2 || trimmed.Length > 3)
+				return new int[] { -1, -1 };
+
             int x = Grid.GridHorizontalScale.ToList().IndexOf(position[0]);
 
-            int y = int.Parse(position.Substring(1)) - 1;
+			int y;
+            int.TryParse(position.Substring(1), out y);
+			y = y - 1;
 
-            return new int[2] { x, y };
+            return new int[2] { x, y};
         }
 
         public override int GetHashCode()
@@ -117,9 +129,14 @@ namespace Tp1_Reseaux
             int distanceEnd = end.X + end.Y;
 
             if (distanceStart < distanceEnd)
-                return start;
+                return start.Clone();
             else
-                return end;
+                return end.Clone();
         }
-    }
+
+		public string ToTextualPosition()
+		{
+			return $"{Grid.GridHorizontalScale[X]}{Y + 1}"; 
+		}
+	}
 }

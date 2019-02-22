@@ -13,13 +13,10 @@ namespace Tp1_Reseaux
         {
             Game game = Game.GetInstance();
 
-            game.Setup();
+			game.Setup();
 
-            game.Start();
-
-            Grid GameGrid = Grid.GetInstance();
-
-            Console.Write(GameGrid.ToString());
-        }
+			if (!game.Start())
+				WriteLine("Cant launch game");
+		}
     }
 }

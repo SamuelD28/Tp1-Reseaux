@@ -27,6 +27,8 @@
 		//Indicate that the boat is sunk.
 		public bool Sunk => LifePoints <= 0;
 
+		public char Representation { get; private set; }
+
 		//Type of the current boat
 		public BoatType Type { get; private set; }
 
@@ -40,11 +42,23 @@
             Type = type;
 			switch (type)
 			{
-				case BoatType.Torpedo: LifePoints = 3; break;
-				case BoatType.Submarine: LifePoints = 3; break;
-				case BoatType.CounterTorpedo: LifePoints = 2; break;
-				case BoatType.AircraftCarrier: LifePoints = 5; break;
-				case BoatType.Destroyer: LifePoints = 4; break;
+				case BoatType.Torpedo:
+				case BoatType.Submarine:
+					LifePoints = 3;
+					Representation = '3';
+				break;
+				case BoatType.CounterTorpedo:
+					LifePoints = 2;
+					Representation = '2';
+				break;
+				case BoatType.AircraftCarrier:
+					LifePoints = 5;
+					Representation = '5';
+				break;
+				case BoatType.Destroyer:
+					LifePoints = 4;
+					Representation = '4';
+				break;
 			}
 		}
 	}

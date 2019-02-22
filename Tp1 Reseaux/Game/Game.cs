@@ -184,25 +184,39 @@ namespace Tp1_Reseaux
         /// </summary>
         private void PlaceBoat()
         {
+			List<string> boatsPositions = new List<string>();
+
             while(Boats.Exists(b => !b.IsPlaced))
             {
+				Console.Clear();
                 WriteLine(GameGrid.ToString());
                 Boat boat = Boats.Find(b => !b.IsPlaced);
-                WriteLine($"{boat.Type.ToString()} Longeur : {boat.LifePoints}");
-                GameGrid.AddBoat(boat, GetPosition(), GetPosition());
-            }
+                WriteLine($"========================\nPlacing : {boat.Type.ToString()}\nLength : {boat.LifePoints}");
+
+				Position firstPosition = GetPosition();
+				Position secondPosition = GetPosition();
+
+				if (GameGrid.AddBoat(boat, firstPosition, secondPosition))
+					boatsPositions.Add(firstPosition.ToTextualPosition() + secondPosition.ToTextualPosition());
+            } 
+
+			foreach(string boatPosition in boatsPositions)
+			{
+				Client.Send(new PlaceBoat(boatPosition));
+				System.Threading.Thread.Sleep(50);
+			}
         }
 
-        public Position GetPosition()
+        private Position GetPosition()
         {
             Position position = null;
             while(position is null)
             {
-                WriteLine($"Veuillez entrer la coordonnée");
+                Write($"Enter Coordinate (ex:A10) : ");
                 position = Position.Create(ReadLine());
 
                 if (position is null)
-                    WriteLine("Position wrong dumbass");
+                    WriteLine("Wrong position dumbass");
             }
             return position;
         }

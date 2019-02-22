@@ -33,7 +33,7 @@ namespace Tp1_Reseaux
 		private static StreamWriter Writer = StreamWriter.Null;
 
 		//Tcp connexion with the server
-		private static TcpClient Tcp;
+		private static TcpClient Tcp = new TcpClient();
 
 		//Instance of the singleton class
 		private static Client Instance = null;

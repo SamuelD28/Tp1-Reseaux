@@ -17,12 +17,13 @@ namespace Tp1_Reseaux
 	/// Class used to handle the grid for the game
 	/// </summary>
 	public sealed class Grid
-    {
+	{
 		//Size of the grid
-        public static readonly int GridSize = 10;
+		public static readonly int GridSize = 10;
 
 		//Horizontal scale of the grid. Used for parsing and displaying
-        public static readonly char[] GridHorizontalScale = new char[]{ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'};
+		public static readonly char[] GridHorizontalScale = new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J' };
+		public static readonly string[] GridVerticalScale = new string[] {"1 ","2 ","3 ","4 ","5 ","6 ","7 ","8 ", "9 ", "10"};
 
 		//Contains the all the grid data for the class
 		private Dictionary<Position, object> GridTable = new Dictionary<Position, object>();
@@ -33,7 +34,8 @@ namespace Tp1_Reseaux
 		/// <summary>
 		/// Private Constructor that initiate a grid
 		/// </summary>
-		private Grid(){
+		private Grid()
+		{
 			Init();
 		}
 
@@ -49,9 +51,9 @@ namespace Tp1_Reseaux
 		/// </summary>
 		private void Init()
 		{
-			for(int y = 0; y < GridSize; y++)
+			for (int y = 0; y < GridSize; y++)
 			{
-				for(int x = 0; x < GridSize ; x++)
+				for (int x = 0; x < GridSize; x++)
 				{
 					GridTable.Add(Position.Create(x, y), null);
 				}
@@ -65,18 +67,23 @@ namespace Tp1_Reseaux
 		/// <param name="start">Starting position of the boat</param>
 		/// <param name="end">Ending position of the boat</param>
 		/// <returns></returns>
-		public bool AddBoat(Boat boat,  Position start, Position end)
+		public bool AddBoat(Boat boat, Position start, Position end)
 		{
 			int? difference = start.Difference(end);
 
+			//Scuff as fuck
 			if (difference != boat.LifePoints)
 				return false;
 
 			Position startingPoint = Position.GetClosestPosition(start, end);
 
-			for(int i = 0; i < difference ; i++)
+			for (int i = 0; i < difference; i++)
 			{
 				Position key = GridTable.Keys.First(p => p.Equals(startingPoint));
+
+				if (GridTable[key] is Boat)
+					return false;
+
 				GridTable[key] = boat;
 
 				if (startingPoint.Flow == PositionFlow.Horizontal)
@@ -84,7 +91,9 @@ namespace Tp1_Reseaux
 				else
 					startingPoint.Assign(startingPoint.X, startingPoint.Y + 1);
 			}
-            boat.IsPlaced = true;
+
+			boat.IsPlaced = true;
+
 			return true;
 		}
 
@@ -98,9 +107,9 @@ namespace Tp1_Reseaux
 			Position key = GridTable.Keys.First(p => p.Equals(shot));
 
 			object result;
-			GridTable.TryGetValue(key , out result);
+			GridTable.TryGetValue(key, out result);
 
-			if(result is Boat)
+			if (result is Boat)
 			{
 				Boat boat = (Boat)result;
 				boat.LifePoints = boat.LifePoints - 1;
@@ -115,24 +124,26 @@ namespace Tp1_Reseaux
 		/// <returns></returns>
 		public override string ToString()
 		{
-			string gridRepresentation = "";
 			int startingPoint = 0;
 
-			foreach(KeyValuePair<Position, object> keyValuePair in GridTable)
+			string gridRepresentation = "  " + new string(GridHorizontalScale) + "\n" + GridVerticalScale[startingPoint];
+
+			foreach (KeyValuePair<Position, object> keyValuePair in GridTable)
 			{
 				object currentGridCell = keyValuePair.Value;
 				Position currentPosition = keyValuePair.Key;
 
-				if(currentPosition.Y != startingPoint)
+				if (currentPosition.Y != startingPoint)
 				{
 					gridRepresentation += "\n";
 					startingPoint = currentPosition.Y;
+					gridRepresentation += GridVerticalScale[currentPosition.Y];
 				}
 
 				if (currentGridCell is null)
-					gridRepresentation += ".";
+					gridRepresentation += "-";
 				else if (currentGridCell is Boat)
-					gridRepresentation += "O";
+					gridRepresentation += $"{((Boat)currentGridCell).Representation}";
 				else if (currentGridCell is Shot)
 					gridRepresentation += "X";
 				else
@@ -140,5 +151,5 @@ namespace Tp1_Reseaux
 			}
 			return gridRepresentation;
 		}
-    }
+	}
 }
