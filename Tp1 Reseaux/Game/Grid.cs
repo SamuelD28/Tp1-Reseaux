@@ -19,7 +19,7 @@ namespace Tp1_Reseaux
 	public sealed class Grid
 	{
 		//Size of the grid
-		public static readonly int GridSize = 10;
+		public const int GridSize = 10;
 
 		//Horizontal scale of the grid. Used for parsing and displaying
 		public static readonly char[] GridHorizontalScale = new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J' };
@@ -67,14 +67,15 @@ namespace Tp1_Reseaux
 		/// <param name="start">Starting position of the boat</param>
 		/// <param name="end">Ending position of the boat</param>
 		/// <returns></returns>
-		public bool AddBoat(Boat boat, Position start, Position end)
+		public bool AddBoat(IBoat boat, Position start, Position end)
 		{
+			//Sortir une interface au lieu dutiliser directement Boat
 			int? difference = start.Difference(end);
 
-			//Scuff as fuck
 			if (difference != boat.LifePoints)
 				return false;
 
+			Position.AssignFlow(start, end);
 			Position startingPoint = Position.GetClosestPosition(start, end);
 
 			for (int i = 0; i < difference; i++)
@@ -91,9 +92,6 @@ namespace Tp1_Reseaux
 				else
 					startingPoint.Assign(startingPoint.X, startingPoint.Y + 1);
 			}
-
-			boat.IsPlaced = true;
-
 			return true;
 		}
 
@@ -112,7 +110,7 @@ namespace Tp1_Reseaux
 			if (result is Boat)
 			{
 				Boat boat = (Boat)result;
-				boat.LifePoints = boat.LifePoints - 1;
+				boat.SubstractLifePoints(1);
 			}
 
 			GridTable[key] = new Shot(key);

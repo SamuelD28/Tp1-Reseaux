@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Boats\Boat.cs" />
+    <Compile Include="Boats\IBoat.cs" />
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\Shot.cs" />
     <Compile Include="Network\Client.cs" />

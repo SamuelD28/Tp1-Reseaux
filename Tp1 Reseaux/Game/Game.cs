@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Console;
+using static Tp1_Reseaux.PlaceShot;
 
 namespace Tp1_Reseaux
 {
@@ -36,11 +37,13 @@ namespace Tp1_Reseaux
 
         private Grid GameGrid = Grid.GetInstance();
 
-        //Contains the current instance of the class
-        private static Game Instance = null;
-
-        private static List<Boat> Boats = new List<Boat>() { new Boat(BoatType.AircraftCarrier), new Boat(BoatType.Destroyer),
-            new Boat(BoatType.Submarine), new Boat(BoatType.Torpedo), new Boat(BoatType.CounterTorpedo)};
+		private static readonly List<Boat> Boats = new List<Boat>() {
+				new Boat(BoatType.AircraftCarrier),
+				new Boat(BoatType.Destroyer),
+				new Boat(BoatType.Submarine),
+				new Boat(BoatType.Torpedo),
+				new Boat(BoatType.CounterTorpedo)
+		};
 
         //Return the player that was assigned by the server
         public string CurrentPlayer => (Client.PlayerAssigned != 0) ? "Joueur" + Client.PlayerAssigned : "Non-disponible";
@@ -54,8 +57,9 @@ namespace Tp1_Reseaux
         //Contains the current state of the game
         public GameState CurrentState { get; private set; }
 
-
-        /// <summary>
+        private static Game Instance = null;
+        
+		/// <summary>
         /// Method used to obtain the instance of the game
         /// </summary>
         /// <returns></returns>
@@ -75,12 +79,12 @@ namespace Tp1_Reseaux
         /// </summary>
         private void GetIpAdress()
         {
-            Console.Write("Enter the IP Adress : ");
-            CurrentIp = Console.ReadLine();
+			Write($"[{DateTime.Now}] Enter the IP Adress : ");
+            CurrentIp = ReadLine();
 
             if (CurrentIp.Trim().Length == 0)
             {
-                Console.WriteLine($"Using Default ({DEFAULT_IP})");
+				WriteLog(ConsoleColor.DarkGreen, $"Using Default ({DEFAULT_IP})");
                 CurrentIp = DEFAULT_IP;
             }
         }
@@ -90,13 +94,13 @@ namespace Tp1_Reseaux
         /// </summary>
         private void GetPortNumber()
         {
-            Console.Write("Enter the Port Number: ");
+			Write($"[{DateTime.Now}] Enter the Port Number : ");
             int portNumber;
-            int.TryParse(Console.ReadLine(), out portNumber);
+            int.TryParse(ReadLine(), out portNumber);
 
             if (portNumber == default(int))
             {
-                Console.WriteLine($"Using default ({DEFAULT_PORT})");
+				WriteLog(ConsoleColor.DarkGreen, $"Using default ({DEFAULT_PORT})");
                 CurrentPort = DEFAULT_PORT;
             }
             else
@@ -132,13 +136,13 @@ namespace Tp1_Reseaux
                 try
                 {
                     Client.Connect(CurrentIp, CurrentPort);
-                    Console.WriteLine("Connected to the server");
+					WriteLog(ConsoleColor.DarkGreen, "Connected to the server");
                     CurrentState = GameState.Ready;
                     break;
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Cant connect to the server.\n{e.Message}");
+					WriteLog(ConsoleColor.Red, $"Cant connect to the server.\n{e.Message}");
                 }
             }
         }
@@ -184,39 +188,51 @@ namespace Tp1_Reseaux
         /// </summary>
         private void PlaceBoat()
         {
-			List<string> boatsPositions = new List<string>();
-
+			//Loop until all the boats are mark as placed
             while(Boats.Exists(b => !b.IsPlaced))
             {
-				Console.Clear();
+				Clear();
                 WriteLine(GameGrid.ToString());
-                Boat boat = Boats.Find(b => !b.IsPlaced);
-                WriteLine($"========================\nPlacing : {boat.Type.ToString()}\nLength : {boat.LifePoints}");
 
-				Position firstPosition = GetPosition();
-				Position secondPosition = GetPosition();
+                Boat boat = Boats.Find(b => !b.IsPlaced);
+				DisplayBoatBeeingPlace(boat);
+
+				Position firstPosition = GetPosition("Enter First Coordinate : ");
+				Position secondPosition = GetPosition("Enter Second Coordinate : ");
 
 				if (GameGrid.AddBoat(boat, firstPosition, secondPosition))
-					boatsPositions.Add(firstPosition.ToTextualPosition() + secondPosition.ToTextualPosition());
+					boat.AssignPlacement(firstPosition, secondPosition);
             } 
 
-			foreach(string boatPosition in boatsPositions)
+			foreach(IBoat boat in Boats)
 			{
-				Client.Send(new PlaceBoat(boatPosition));
+				Client.Send(new PlaceBoat(boat.GetPlacement()));
 				System.Threading.Thread.Sleep(50);
 			}
         }
 
-        private Position GetPosition()
+		private void DisplayBoatBeeingPlace(IBoat boat)
+		{
+			WriteLine($"========================\nPlacing : {boat.Type.ToString()}\nLength : {boat.LifePoints}");
+		}
+
+		private void WriteLog(ConsoleColor color, string message)
+		{
+			ForegroundColor = color;
+			WriteLine(message);
+			ResetColor();
+		}
+
+		private Position GetPosition(string message)
         {
             Position position = null;
             while(position is null)
             {
-                Write($"Enter Coordinate (ex:A10) : ");
+                Write(message);
                 position = Position.Create(ReadLine());
 
                 if (position is null)
-                    WriteLine("Wrong position dumbass");
+                    WriteLine("Incorrect position. (Format [A-J][1-9][1-9])");
             }
             return position;
         }
@@ -228,6 +244,21 @@ namespace Tp1_Reseaux
         {
             string shotPosition = Console.ReadLine();
             PlaceShot shotRequest = new PlaceShot(shotPosition);
+			Client.Send(shotRequest);
+
+			if(shotRequest.Result == ShotResult.Hit)
+			{
+				//do something...
+			}
+			else if(shotRequest.Result == ShotResult.Missed)
+			{
+				//do something...
+			}
+			else
+			{
+				//do something...
+			}
+
         }
     }
 }

@@ -47,7 +47,8 @@ namespace Tp1_Reseaux
 		/// <summary>
 		/// Private constructor for the Client
 		/// </summary>
-		private Client() {
+		private Client()
+		{
 			PlayerAssigned = default(int);
 		}
 
@@ -118,9 +119,6 @@ namespace Tp1_Reseaux
 		/// Method for readign the stream from the server
 		/// </summary>
 		/// <returns>Stream from the server</returns>
-		public string Read()
-		{
-			return Reader.ReadLine();
-		}
+		public string Read() => Reader.ReadLine();
 	}
 }

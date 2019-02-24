@@ -12,7 +12,7 @@ namespace Tp1_Reseaux
 			Hit
 		}
 
-		public ShotResult MyShotResult { get; private set; }
+		public ShotResult Result { get; private set; }
 
 		public string PlayerTurn { get; private set; }
 
@@ -50,9 +50,9 @@ namespace Tp1_Reseaux
 
 			switch (shotResult.ToUpper())
 			{
-				case "FIRE": MyShotResult = ShotResult.Hit; break;
-				case "MISS": MyShotResult = ShotResult.Missed; break;
-				case "SUNK": MyShotResult = ShotResult.Sunk; break;
+				case "FIRE": Result = ShotResult.Hit; break;
+				case "MISS": Result = ShotResult.Missed; break;
+				case "SUNK": Result = ShotResult.Sunk; break;
 				default: throw new ServerResponseException();
 			}
 		}

@@ -23,8 +23,7 @@ namespace Tp1_Reseaux
     {
         public int X { get; private set; }
         public int Y { get; private set; }
-
-        public PositionFlow Flow { get; set; }
+        public PositionFlow Flow { get; private set; }
 
         private Position(int x, int y)
         {
@@ -35,9 +34,7 @@ namespace Tp1_Reseaux
         public static Position Create(int x, int y)
         {
             if (!PositionWithinBound(x, y))
-            {
                 return null;
-            }
 
             return new Position(x, y);
         }
@@ -52,29 +49,45 @@ namespace Tp1_Reseaux
             return new Position(values[0], values[1]);
         }
 
-        public void Assign(int x, int y)
+        public bool Assign(int x, int y)
         {
-            X = x;
-            Y = y;
+			if (PositionWithinBound(x, y))
+			{
+				X = x;
+				Y = y;
+				return false;
+			}
+			else
+				return false;
         }
 
         public int? Difference(Position second)
         {
             if (X == second.X && Y != second.Y)
-            {
-                Flow = PositionFlow.Vertical;
-                second.Flow = PositionFlow.Vertical;
                 return Math.Abs(Y - second.Y) + 1; //We add one to account for the first position not beeing included
-            }
             else if (Y == second.Y && X != second.X)
-            {
-                Flow = PositionFlow.Horizontal;
-                second.Flow = PositionFlow.Horizontal;
                 return Math.Abs(X - second.X) + 1; //We add one to account for the first position not beeing included
-			}
             else
                 return null;
         }
+
+		public static bool AssignFlow(Position firstPoint, Position secondPoint)
+		{
+			if (firstPoint.X == secondPoint.X && firstPoint.Y != secondPoint.Y)
+			{
+				firstPoint.Flow = PositionFlow.Vertical;
+				secondPoint.Flow = PositionFlow.Vertical;
+				return true;
+			}
+			else if (firstPoint.Y == secondPoint.Y && firstPoint.X != secondPoint.X)
+			{
+				firstPoint.Flow = PositionFlow.Horizontal;
+				secondPoint.Flow = PositionFlow.Horizontal;
+				return true;
+			}
+			else
+				return false;
+		}
 
 		public Position Clone()
 		{
@@ -108,6 +121,19 @@ namespace Tp1_Reseaux
             return new int[2] { x, y};
         }
 
+        public static Position GetClosestPosition(Position start, Position end)
+        {
+            int distanceStart = start.X + start.Y;
+            int distanceEnd = end.X + end.Y;
+
+            if (distanceStart < distanceEnd)
+                return start.Clone();
+            else
+                return end.Clone();
+        }
+
+		public override string ToString() => $"{Grid.GridHorizontalScale[X]}{Y + 1}"; 
+
         public override int GetHashCode()
         {
             return X * 31 + Y * 31;
@@ -122,21 +148,5 @@ namespace Tp1_Reseaux
 
             return Y == position.Y && X == position.X;
         }
-
-        public static Position GetClosestPosition(Position start, Position end)
-        {
-            int distanceStart = start.X + start.Y;
-            int distanceEnd = end.X + end.Y;
-
-            if (distanceStart < distanceEnd)
-                return start.Clone();
-            else
-                return end.Clone();
-        }
-
-		public string ToTextualPosition()
-		{
-			return $"{Grid.GridHorizontalScale[X]}{Y + 1}"; 
-		}
 	}
 }
