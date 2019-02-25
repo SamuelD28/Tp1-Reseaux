@@ -14,8 +14,6 @@ namespace Tp1_Reseaux
 
 		public ShotResult Result { get; private set; }
 
-		public string PlayerTurn { get; private set; }
-
 		public PlaceShot(string message) : base(message) { } 
 
 		public override void ParseReceivedMessage(string message)
@@ -34,7 +32,6 @@ namespace Tp1_Reseaux
 			if (matches.Length != 3)
 				throw new ServerResponseException();
 
-			PlayerTurn = matches.Groups[1].Value.ToUpper();
 		}
 
 		public void ParseReceivedPlayerShot(string message)
@@ -59,11 +56,11 @@ namespace Tp1_Reseaux
 
 		public override string ParseSendMessage(string message)
 		{
-			string trimmed = message.Replace("", String.Empty);
+			string trimmed = message.Replace(" ", String.Empty);
 
 			if (trimmed.Length < 2 || trimmed.Length > 3)
 				throw new RequestMalformedException();
-
+			
 			return trimmed.ToUpper();
 		}
 	}

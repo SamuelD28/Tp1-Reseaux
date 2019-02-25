@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Tp1_Reseaux
 {
-    public enum PositionFlow
+	public enum PositionFlow
     {
         Horizontal,
         Vertical
