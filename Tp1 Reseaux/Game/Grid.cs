@@ -118,8 +118,9 @@ namespace Tp1_Reseaux
 		{
 			int startingPoint = 0;
 
-			string gridRepresentation = "  " + new string(GridHorizontalScale) + "\n" + GridVerticalScale[startingPoint];
-
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+			string gridRepresentation = "    " + String.Join(" ", GridHorizontalScale) + "\n" + " " + GridVerticalScale[startingPoint];
+            //Console.ResetColor();
 			foreach (KeyValuePair<Position, object> keyValuePair in GridTable)
 			{
 				object currentGridCell = keyValuePair.Value;
@@ -129,15 +130,15 @@ namespace Tp1_Reseaux
 				{
 					gridRepresentation += "\n";
 					startingPoint = currentPosition.Y;
-					gridRepresentation += GridVerticalScale[currentPosition.Y];
+					gridRepresentation += " " + GridVerticalScale[currentPosition.Y];
 				}
 
 				if (currentGridCell is null)
-					gridRepresentation += "-";
+					gridRepresentation += " -";
 				else if (currentGridCell is Boat)
-					gridRepresentation += $"{((Boat)currentGridCell).Representation}";
+					gridRepresentation += $" {((Boat)currentGridCell).Representation}";
 				else if (currentGridCell is Shot)
-					gridRepresentation += "X";
+					gridRepresentation += " X";
 				else
 					throw new UnknownGridCellException();
 			}
