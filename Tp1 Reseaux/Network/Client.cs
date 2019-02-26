@@ -26,9 +26,6 @@ namespace Tp1_Reseaux
 		//Indicate that the connection is open or close
 		public bool IsOpen => Tcp.Connected;
 
-		//Retrieve the player assigned by the server. SHOULD EXTRACT
-		public int PlayerAssigned { get; private set; }
-
 		//Reader used for reading the server stream
 		private static StreamReader Reader = StreamReader.Null;
 
@@ -80,14 +77,6 @@ namespace Tp1_Reseaux
 		{
 			Reader = new StreamReader(Tcp.GetStream());
 			Writer = new StreamWriter(Tcp.GetStream());
-
-			int playerAssignedByServer;
-			int.TryParse(Read(), out playerAssignedByServer);
-
-			if (playerAssignedByServer == default(int))
-				throw new NoPlayerAssignedException("No player was assigned by the server");
-
-			PlayerAssigned = playerAssignedByServer;
 		}
 
 		/// <summary>
@@ -114,6 +103,6 @@ namespace Tp1_Reseaux
 		/// Method for readign the stream from the server
 		/// </summary>
 		/// <returns>Stream from the server</returns>
-		public string Read() => Reader.ReadLine();
+		public string Read() => !Reader.EndOfStream ? Reader.ReadLine() : null;
 	}
 }

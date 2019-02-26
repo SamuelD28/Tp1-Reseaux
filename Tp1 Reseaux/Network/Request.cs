@@ -7,7 +7,9 @@ namespace Tp1_Reseaux
 	{
 		Shot,
 		Boat,
-		Turn
+		Turn,
+		Won,
+		Wait
 	}
 
 	/// <summary>
@@ -18,7 +20,7 @@ namespace Tp1_Reseaux
 	/// <exception cref="RequestMalformedException">Request format was invalid and could not be parsed</exception>
 	public static class Request
 	{
-		public static string Message{ get; private set; }
+		public static string Message { get; private set; }
 
 		public static RequestType Type { get; private set; }
 
@@ -27,8 +29,12 @@ namespace Tp1_Reseaux
 			//THIS METHOD NEEDS TO BE IMPROVED. TOO CHEESY
 			if (message.Contains("-"))
 				return RequestType.Shot;
+			else if (message == "WAIT")
+				return RequestType.Wait;
 			else if (message.EndsWith("TURN"))
 				return RequestType.Turn;
+			else if (message.EndsWith("WIN"))
+				return RequestType.Won;
 			else
 				return null;
 		}
@@ -41,7 +47,8 @@ namespace Tp1_Reseaux
 				case RequestType.Shot: ParseShotResponse(rawResponse, ref response); break;
 				case RequestType.Boat: ParseBoatResponse(rawResponse, ref response); break;
 				case RequestType.Turn: ParseTurnResponse(rawResponse, ref response); break;
-				default:break;
+				case RequestType.Won: ParseWonResponse(rawResponse, ref response); break;
+				default: break;
 			}
 			return response;
 		}
@@ -60,7 +67,7 @@ namespace Tp1_Reseaux
 				case RequestType.Shot: Message = ParseShotRequest(message); break;
 				case RequestType.Boat: Message = ParseBoatRequest(message); break;
 				case RequestType.Turn: Message = ""; break;
-				default:break;
+				default: break;
 			}
 			return true;
 		}
@@ -130,6 +137,18 @@ namespace Tp1_Reseaux
 				case "SUNK": response.ShotResult = ShotResult.Sunk; break;
 				default: throw new ServerResponseException();
 			}
+		}
+
+		public static void ParseWonResponse(string message, ref Response response)
+		{
+			Regex regex = new Regex("^([a-zA-Z][1-9]) (WIN)$");
+			Match matches = regex.Match(message);
+
+			if (matches.Groups.Count != 3)
+				throw new ServerResponseException();
+
+			string player = matches.Groups[1].Value;
+			response.Player = player;
 		}
 
 		//Could we ignore this part when sending shot request? Since the first message send by
