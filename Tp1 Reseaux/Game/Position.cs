@@ -46,16 +46,13 @@ namespace Tp1_Reseaux
             return new Position(values[0], values[1]);
         }
 
-        public bool Assign(int x, int y)
+        public void Assign(int x, int y)
         {
 			if (PositionWithinBound(x, y))
 			{
 				X = x;
 				Y = y;
-				return false;
 			}
-			else
-				return false;
         }
 
         public int? Difference(Position second)
@@ -68,22 +65,18 @@ namespace Tp1_Reseaux
                 return null;
         }
 
-		public static bool AssignFlow(Position firstPoint, Position secondPoint)
+		public static void AssignFlow(Position firstPoint, Position secondPoint)
 		{
 			if (firstPoint.X == secondPoint.X && firstPoint.Y != secondPoint.Y)
 			{
 				firstPoint.Flow = PositionFlow.Vertical;
 				secondPoint.Flow = PositionFlow.Vertical;
-				return true;
 			}
 			else if (firstPoint.Y == secondPoint.Y && firstPoint.X != secondPoint.X)
 			{
 				firstPoint.Flow = PositionFlow.Horizontal;
 				secondPoint.Flow = PositionFlow.Horizontal;
-				return true;
 			}
-			else
-				return false;
 		}
 
 		public Position Clone()

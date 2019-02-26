@@ -84,12 +84,12 @@ namespace Tp1_Reseaux
 			Placement[1] = furthestPoint;
 		}
 
-		public void SubstractLifePoints(int dommage)
+		public void SubstractLifePoints(int damage)
 		{
-			if (LifePoints - dommage < 0)
+			if (LifePoints - damage < 0)
 				LifePoints = 0;
 			else
-				LifePoints = LifePoints - dommage;
+				LifePoints = LifePoints - damage;
 		}
 
 		/// <summary>

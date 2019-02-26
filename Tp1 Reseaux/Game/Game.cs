@@ -173,7 +173,7 @@ namespace Tp1_Reseaux
 			while (Client.IsOpen)
 			{
 				Clear();
-				DrawGrids();
+                DrawBoard();
 				switch (CurrentState)
 				{
 					case GameState.Placing_Boat: HandleBoatPlacement(); break;
@@ -252,6 +252,9 @@ namespace Tp1_Reseaux
 			//Loop until all the boats are mark as placed
 			while (Boats.Exists(b => !b.IsPlaced))
 			{
+                Clear();
+                DrawBoard();
+
 				Boat boat = Boats.Find(b => !b.IsPlaced);
 				DrawInformationBox($"Placing : {boat.Type.ToString()}", $"Length : {boat.LifePoints}");
 
@@ -419,22 +422,61 @@ namespace Tp1_Reseaux
 			Clear();
 		}
 
+        private void DrawHeader()
+        {
+            WriteLine("╔══════════════════════════════════════════════════════════════════════╗");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Write("║");
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Write("┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┤ ");
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Write("BATTLESHIP");
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Write(" ├┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Write("║");
+            WriteLine("\n╚══════════════════════════════════════════════════════════════════════╝");
+            WriteLine();
+            Console.ResetColor();
+        }
+
 		private void DrawGrids()
 		{
-			//Find a way to make them display next to each other
-			WriteLine(GameGrid.ToString());
-			WriteLine(ShootingGrid.ToString());
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Write(" ───── ");
+            Console.ResetColor();
+            Write("Your grid");
+            Console.ForegroundColor = ConsoleColor.DarkRed; 
+            Write(" ──────\n");
+            Console.ResetColor();
+            WriteLine(GameGrid.ToString());
+            WriteLine();
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Write(" ───── ");
+            Console.ResetColor();
+            Write("Shots done");
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Write(" ──────\n");
+            Console.ResetColor();
+            WriteLine(ShootingGrid.ToString());
+            Console.ResetColor();
 		}
+
+        private void DrawBoard()
+        {
+            DrawHeader();
+            DrawGrids();
+        }
 
 		private void DrawInformationBox(string header, string body)
 		{
 			Write("\n");
-			WriteLine($"┌".PadRight(50, '─') + "┐\n" +
-					  $"|{CurrentState}".PadRight(50) + "|\n" +
-					  $"|".PadRight(50) + "|\n" +
-					  $"|{header}".PadRight(50) + "|\n" +
-					  $"|{body}".PadRight(50) + "|\n" +
-					  $"└".PadRight(50, '─') + "┘\n");
+			WriteLine($"╔".PadRight(50, '═') + "╗\n" +
+					  $"║ Status : {CurrentState}".PadRight(50) + "║\n" +
+					  $"║".PadRight(50) + "║\n" +
+					  $"║ {header}".PadRight(50) + "║\n" +
+					  $"║ {body}".PadRight(50) + "║\n" +
+					  $"╚".PadRight(50, '═') + "╝\n");
 		}
 
 		private void DrawLog(ConsoleColor color, string message)
