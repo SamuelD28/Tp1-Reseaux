@@ -4,6 +4,8 @@ using System.Net.Sockets;
 
 namespace Tp1_Reseaux
 {
+	//Should extract logic related to the player as it does not belong in this class
+
 	/// <summary>
 	/// Exception thrown when the client cant retrieve the
 	/// player assigned by the server.
@@ -18,6 +20,7 @@ namespace Tp1_Reseaux
 	/// Class that handle the client for communicating
 	/// with the server
 	/// </summary>
+	/// <exception cref="TimeoutException">The server could not connect with the client in time</exception>
 	public sealed class Client
 	{
 		//Indicate that the connection is open or close
@@ -47,10 +50,7 @@ namespace Tp1_Reseaux
 		/// <summary>
 		/// Private constructor for the Client
 		/// </summary>
-		private Client()
-		{
-			PlayerAssigned = default(int);
-		}
+		private Client(){}
 
 		/// <summary>
 		/// Method used to connect the client to the server.
@@ -104,13 +104,8 @@ namespace Tp1_Reseaux
 		/// Method used to send request to the server
 		/// </summary>
 		/// <param name="request">Type of request to send</param>
-		public void Send(Request request)
+		public void Send(string message)
 		{
-			string message = request.ParseSendMessage(request.RawMessage);
-
-			if (message is null)
-				throw new RequestMalformedException();
-
 			Writer.Write(message + "\r\n");
 			Writer.Flush();
 		}

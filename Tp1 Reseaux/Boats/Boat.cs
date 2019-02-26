@@ -22,15 +22,17 @@ namespace Tp1_Reseaux
 	}
 
 	/// <summary>
-	/// Class used to handle the boats for the player
+	/// Class used to handle the logic related to
+	/// a boat that is used for playing the game
 	/// </summary>
+	/// <exception cref="BoatNotPlacedException">Requested the placement of a boat that wasnt placed</exception>
     public class Boat : IBoat
 	{
 		//Contains the life points of the boat
 		public int LifePoints { get; private set; }
 
 		//Indicate if the boat has been placed inside the playable grid
-		public bool IsPlaced { get; private set; }
+		public bool IsPlaced => Placement[0] != null && Placement[1] != null;
 
 		//Indicate that the boat is sunk.
 		public bool Sunk => LifePoints <= 0;
@@ -80,7 +82,6 @@ namespace Tp1_Reseaux
 
 			Placement[0] = closestPoint;
 			Placement[1] = furthestPoint;
-			IsPlaced = true;
 		}
 
 		public void SubstractLifePoints(int dommage)
@@ -91,6 +92,11 @@ namespace Tp1_Reseaux
 				LifePoints = LifePoints - dommage;
 		}
 
+		/// <summary>
+		/// Method that return the placement of the boat inside the grid.
+		/// </summary>
+		/// <returns>The string representation of the boat placement</returns>
+		/// <exception cref="BoatNotPlacedException">The boat wasnt place inside the grid</exception>
 		public string GetPlacement()
 		{
 			if (Placement[0] is null || Placement[1] is null)

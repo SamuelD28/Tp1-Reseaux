@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static System.Console;
-using static Tp1_Reseaux.PlaceShot;
 
 namespace Tp1_Reseaux
 {
@@ -34,7 +31,11 @@ namespace Tp1_Reseaux
 		//Contains the client instance used for communication with the server
 		private Client Client = Client.GetInstance();
 
-		private Grid GameGrid = Grid.GetInstance();
+		private List<Shot> MyShotHistory = new List<Shot>();
+		private List<Shot> OpponentShotHistory = new List<Shot>();
+
+		private Grid GameGrid = new Grid();
+		private Grid ShootingGrid = new Grid(); 
 
 		private static readonly List<Boat> Boats = new List<Boat>() {
 				new Boat(BoatType.AircraftCarrier),
@@ -181,11 +182,11 @@ namespace Tp1_Reseaux
 			while (Client.IsOpen)
 			{
 				Clear();
-				WriteLine(GameGrid.ToString());
+				DrawGrids();
 				switch (CurrentState)
 				{
-					case GameState.Placing_Boat: PlaceBoat(); break;
-					case GameState.My_Turn: PlaceShot(); break;
+					case GameState.Placing_Boat: HandleBoatPlacement(); break;
+					case GameState.My_Turn: HandleMyTurn(); break;
 					case GameState.Waiting: Waiting(); break;
 					case GameState.Error: break;
 					case GameState.Victory: break;
@@ -193,18 +194,25 @@ namespace Tp1_Reseaux
 			}
 		}
 
+		private void HandleBoatPlacement()
+		{
+			GetBoatPlacements();
+			SendBoatPlacements();
+			CurrentState = GameState.Waiting;
+		}
+
 		/// <summary>
 		/// Method used to place boat for the game.
 		/// </summary>
-		private void PlaceBoat()
+		private void GetBoatPlacements()
 		{
 			//Loop until all the boats are mark as placed
 			while (Boats.Exists(b => !b.IsPlaced))
 			{
 				Boat boat = Boats.Find(b => !b.IsPlaced);
-				DisplayInformationBox($"Placing : {boat.Type.ToString()}", $"Length : {boat.LifePoints}");
+				DrawInformationBox($"Placing : {boat.Type.ToString()}", $"Length : {boat.LifePoints}");
 
-				//Used for testing purposes only
+				//----Used for testing purposes only-----//
 				if (UseDefaultPlacements()) break;
 
 				Position firstPosition = GetPosition("Enter First Coordinate : ");
@@ -213,14 +221,91 @@ namespace Tp1_Reseaux
 				if (GameGrid.AddBoat(boat, firstPosition, secondPosition))
 					boat.AssignPlacement(firstPosition, secondPosition);
 			}
+		}
 
+		private void SendBoatPlacements()
+		{
 			foreach (IBoat boat in Boats)
 			{
-				Client.Send(new PlaceBoat(boat.GetPlacement()));
-				System.Threading.Thread.Sleep(50); //The server doesnt like it if we loop too fast.
+				//Send request to the server
+				Request.SetHeader(RequestType.Boat, boat.GetPlacement());
+				Client.Send(Request.Message);
+
+				//Read response from the server
+				Response response = Request.ParseResponse(Client.Read());
+				//Do a better handling of the request
+				if (!response.Success)
+					WriteLog(ConsoleColor.Red, response.Error);
+
+			}
+		}
+
+		private void HandleMyTurn()
+		{
+			Position position = GetPlayerShot();
+			Response response = SendPlayerShot(position);
+
+			//Le serveur est juste inconsistent.
+			//Il renvoie le tour du joueur si son tir est un succes. Ce qui
+			//fait aucun sens honnetement. 
+			if (response.ShotResult != ShotResult.Missed)
+				GetPlayerTurn();
+		}
+
+		private void GetPlayerTurn()
+		{
+			Request.SetHeader(RequestType.Turn);
+			Response response = Request.ParseResponse(Client.Read());
+
+			if (response.Player == CurrentPlayer)
+				CurrentState = GameState.My_Turn;
+			else
+				CurrentState = GameState.Waiting;
+		}
+
+		/// <summary>
+		/// Method used to handle the logic for sending shot.
+		/// </summary>
+		private Position GetPlayerShot()
+		{
+			Shot lastShotPlayerOne = (MyShotHistory.Count > 0)?MyShotHistory.Last(): null;				
+			Shot lastShotPlayerTwo = (OpponentShotHistory.Count > 0)?OpponentShotHistory.Last(): null;
+
+			DrawInformationBox(
+				$"Payer One Last Shot : {(lastShotPlayerOne != null?lastShotPlayerOne.ToString():"No shot yet")}",
+				$"Player Two Last Shot : {(lastShotPlayerTwo != null ? lastShotPlayerTwo.ToString() : "No shot yet")}");
+
+			return GetPosition("Enter Shooting Coordinate : ");
+		}
+
+		private Response SendPlayerShot(Position position)
+		{
+			//Send request to the server
+			Request.SetHeader(RequestType.Shot, position.ToString());
+			Client.Send(Request.Message);
+
+			//Read the response from the server
+			Response response = Request.ParseResponse(Client.Read());
+			//Do a better handling of the response in case of an error.
+			if (!response.Success)
+				WriteLog(ConsoleColor.Red, response.Error);
+
+			if (response.ShotResult == ShotResult.Hit)
+			{
+				AddShotToMyHistory(new Shot(position, true));
+			}
+			else if (response.ShotResult == ShotResult.Missed)
+			{
+				CurrentState = GameState.Waiting;
+				AddShotToMyHistory(new Shot(position, false));
+			}
+			else if (response.ShotResult == ShotResult.Sunk)
+			{
+				AddShotToMyHistory(new Shot(position, true));
+				WriteLog(ConsoleColor.DarkGreen, "Sunk ship"); //TEMPORARY
 			}
 
-			CurrentState = GameState.Waiting;
+			return response;
 		}
 
 		private bool UseDefaultPlacements()
@@ -242,7 +327,14 @@ namespace Tp1_Reseaux
 				return false;
 		}
 
-		private void DisplayInformationBox(string header, string body)
+		private void DrawGrids()
+		{
+			//Find a way to make them display next to each other
+			WriteLine(GameGrid.ToString());
+			WriteLine(ShootingGrid.ToString());
+		}
+
+		private void DrawInformationBox(string header, string body)
 		{
 			Write("\n");
 			WriteLine($"┌".PadRight(50, '─') + "┐\n" +
@@ -274,40 +366,44 @@ namespace Tp1_Reseaux
 			return position;
 		}
 
-		/// <summary>
-		/// Method used to handle the logic for sending shot.
-		/// </summary>
-		private void PlaceShot()
+		private void AddShotToMyHistory(Shot shot)
 		{
-			DisplayInformationBox($"Payer One Shot : ", $"Player Two Shot : ");
+			MyShotHistory.Add(shot);
+			ShootingGrid.AddShot(shot.Position);
+		}
 
-			Write("Enter the position to shot : ");
-			string shotPosition = ReadLine();
-			PlaceShot shotRequest = new PlaceShot(shotPosition);
-			Client.Send(shotRequest);
-
-			if (shotRequest.Result == ShotResult.Hit)
-			{
-				//do something...
-			}
-			else if (shotRequest.Result == ShotResult.Missed)
-			{
-				//do something...
-			}
-			else
-			{
-				//do something...
-			}
-
+		private void AddShotToOpponentHistory(Shot shot)
+		{
+			OpponentShotHistory.Add(shot);
+			GameGrid.AddShot(shot.Position);
 		}
 
 		private void Waiting()
 		{
-			DisplayInformationBox("", "");
-			string serverResponse = Client.Read();
+			DrawInformationBox($"", "");
 
-			if (serverResponse == $"{CurrentPlayer} TURN")
-				CurrentState = GameState.My_Turn;
+			//Needs to be reworked . Too complicated and cheesy
+			string serverResponse = Client.Read();
+			RequestType? requestType = Request.DetermineReceivedType(serverResponse);
+			Response response = new Response();
+
+			if (requestType == RequestType.Turn)
+			{
+				Request.SetHeader(RequestType.Turn);
+				response = Request.ParseResponse(serverResponse);
+
+				if (response.Player == CurrentPlayer)
+					CurrentState = GameState.My_Turn; 
+			}
+			else if (requestType == RequestType.Shot)
+			{
+				Request.SetHeader(RequestType.Shot);
+				response = Request.ParseResponse(serverResponse);
+
+				AddShotToOpponentHistory(new Shot(response.Position));
+			}
+			else
+				CurrentState = GameState.Waiting;
 		}
 	}
 }

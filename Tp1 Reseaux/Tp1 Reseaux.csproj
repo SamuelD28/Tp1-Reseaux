@@ -48,11 +48,10 @@
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\Shot.cs" />
     <Compile Include="Network\Client.cs" />
-    <Compile Include="Network\PlaceBoat.cs" />
-    <Compile Include="Network\PlaceShot.cs" />
     <Compile Include="Network\Request.cs" />
     <Compile Include="Game\Grid.cs" />
     <Compile Include="Game\Position.cs" />
+    <Compile Include="Network\Response.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

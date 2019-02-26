@@ -1,12 +1,29 @@
 ﻿namespace Tp1_Reseaux
 {
-	internal class Shot
+	public enum ShotResult
 	{
-		private Position key;
+		Hit,
+		Missed,
+		Sunk
+	}
+	
+	public class Shot
+	{
+		public Position Position { get; private set; }
+		public bool Hit { get; private set; }
 
-		public Shot(Position key)
+		public Shot(Position position)
 		{
-			this.key = key;
+			Position = position;
+			Hit = false;
 		}
+
+		public Shot(Position position, bool hit)
+		{
+			Position = position;
+			Hit = hit;
+		}
+
+		public override string ToString() => $"{Position.ToString()} : {(Hit ? "Hit" : "Missed")}";  
 	}
 }

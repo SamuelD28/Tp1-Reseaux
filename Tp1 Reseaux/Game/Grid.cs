@@ -14,8 +14,10 @@ namespace Tp1_Reseaux
 	}
 
 	/// <summary>
-	/// Class used to handle the grid for the game
+	/// Class used to handle all the logic related to
+	/// the manipulation of grid.
 	/// </summary>
+	/// <exception cref="UnknownGridCellException">The grid contain an unhandled object reference</exception>
 	public sealed class Grid
 	{
 		//Size of the grid
@@ -23,27 +25,18 @@ namespace Tp1_Reseaux
 
 		//Horizontal scale of the grid. Used for parsing and displaying
 		public static readonly char[] GridHorizontalScale = new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J' };
-		public static readonly string[] GridVerticalScale = new string[] {"1 ","2 ","3 ","4 ","5 ","6 ","7 ","8 ", "9 ", "10"};
+		public static readonly string[] GridVerticalScale = new string[] { "1 ", "2 ", "3 ", "4 ", "5 ", "6 ", "7 ", "8 ", "9 ", "10" };
 
 		//Contains the all the grid data for the class
 		private Dictionary<Position, object> GridTable = new Dictionary<Position, object>();
 
-		//Contain the instance of the singleton class
-		private static Grid Instance = null;
-
 		/// <summary>
 		/// Private Constructor that initiate a grid
 		/// </summary>
-		private Grid()
+		public Grid()
 		{
 			Init();
 		}
-
-		/// <summary>
-		/// Method used to obtain the instance of the singleton class
-		/// </summary>
-		/// <returns></returns>
-		public static Grid GetInstance() => (Instance is null) ? new Grid() : Instance;
 
 		/// <summary>
 		/// Method used to iniate a grid with null value 
@@ -111,9 +104,10 @@ namespace Tp1_Reseaux
 			{
 				Boat boat = (Boat)result;
 				boat.SubstractLifePoints(1);
+				GridTable[key] = new Shot(key, true);
 			}
-
-			GridTable[key] = new Shot(key);
+			else
+				GridTable[key] = new Shot(key, false);
 		}
 
 		/// <summary>
