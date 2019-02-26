@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Timers;
 
 namespace Tp1_Reseaux
 {
@@ -47,7 +51,7 @@ namespace Tp1_Reseaux
 		/// <summary>
 		/// Private constructor for the Client
 		/// </summary>
-		private Client(){}
+		private Client() { }
 
 		/// <summary>
 		/// Method used to connect the client to the server.
@@ -103,6 +107,36 @@ namespace Tp1_Reseaux
 		/// Method for readign the stream from the server
 		/// </summary>
 		/// <returns>Stream from the server</returns>
-		public string Read() => !Reader.EndOfStream ? Reader.ReadLine() : null;
+		public string Read()
+		{
+			return Reader.ReadLine();
+			//return Reader.ReadLine();
+			//if (Tcp.Available == 0)
+			//	return "";
+
+			//var tokenSource = new CancellationTokenSource();
+			//CancellationToken ct = tokenSource.Token;
+			//string result = null;
+			//Task readBuffer = Task.Factory.StartNew(() =>
+			//{
+			//	ct.ThrowIfCancellationRequested();
+
+			//	result = Reader.ReadLine();
+
+			//	if (ct.IsCancellationRequested)
+			//		ct.ThrowIfCancellationRequested();
+
+			//}, ct);
+			//while (result is null)
+			//{
+			//	if (!readBuffer.Wait(5000))
+			//	{
+			//		tokenSource.Cancel();
+			//		result = "";
+			//	}
+			//}
+			//return result;
+		}
+
 	}
 }

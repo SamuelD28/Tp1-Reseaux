@@ -66,6 +66,8 @@ namespace Tp1_Reseaux
 		//Contains the current port used for the connection by the client
 		public int CurrentPort { get; private set; }
 
+		private bool SkipServerResponse { get; set; }
+
 		//Contains the current state of the game
 		public GameState CurrentState { get; private set; }
 
@@ -183,7 +185,15 @@ namespace Tp1_Reseaux
 					case GameState.Defeat: HandleDefeat(); break;
 					case GameState.Error: break;
 				}
-				ReadServerResponse();
+
+
+				if (!SkipServerResponse)
+					ReadServerResponse();
+				else
+				{
+					CurrentState = GameState.Waiting;
+					SkipServerResponse = false;
+				}
 			}
 		}
 
@@ -221,7 +231,10 @@ namespace Tp1_Reseaux
 			if (response.ShotResult == ShotResult.Hit)
 				AddShotToMyHistory(new Shot(position, true));
 			else if (response.ShotResult == ShotResult.Missed)
+			{
+				SkipServerResponse = true;
 				AddShotToMyHistory(new Shot(position, false));
+			}
 			else if (response.ShotResult == ShotResult.Sunk)
 				AddShotToMyHistory(new Shot(position, true));
 
@@ -313,6 +326,7 @@ namespace Tp1_Reseaux
 		{
 			GetPlayerBoats();
 			SendBoatsToServer();
+			SkipServerResponse = true; //Nasty shit
 		}
 
 		private void HandleWaiting()
@@ -325,7 +339,7 @@ namespace Tp1_Reseaux
 
 		private void ReadServerResponse()
 		{
-			string serverResponse = Client.Read() ?? "";
+			string serverResponse = Client.Read();
 			switch (Request.DetermineReceivedType(serverResponse))
 			{
 				case RequestType.Shot: GetServerShot(serverResponse); break;
@@ -380,7 +394,6 @@ namespace Tp1_Reseaux
 			else
 				CurrentState = GameState.Defeat;
 		}
-
 
 		private bool UseDefaultPlacements()
 		{
