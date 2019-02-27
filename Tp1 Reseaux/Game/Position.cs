@@ -9,13 +9,6 @@ namespace Tp1_Reseaux
         Vertical
     }
 
-    /// <summary>
-    /// La classe position contiendras TOUTE la logique pour
-    /// determiner si une position est valide ou non. Elle leveras
-    /// les exception ou les erreur necessaire pour le signaler 
-    /// a celui qui en fait appel. Cest ici que lon devrait gerer ou
-    /// non la conversion de -1. A revoir
-    /// </summary>
     public class Position
     {
         public int X { get; private set; }

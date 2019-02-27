@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static System.Console;
 
 namespace Tp1_Reseaux
 {
@@ -28,7 +29,7 @@ namespace Tp1_Reseaux
 		public static readonly string[] GridVerticalScale = new string[] { "1 ", "2 ", "3 ", "4 ", "5 ", "6 ", "7 ", "8 ", "9 ", "10" };
 
 		//Contains the all the grid data for the class
-		private Dictionary<Position, object> GridTable = new Dictionary<Position, object>();
+		public Dictionary<Position, object> GridTable = new Dictionary<Position, object>();
 
 		/// <summary>
 		/// Private Constructor that initiate a grid
@@ -100,49 +101,37 @@ namespace Tp1_Reseaux
 			object result;
 			GridTable.TryGetValue(key, out result);
 
+
 			if (result is Boat)
 			{
 				Boat boat = (Boat)result;
 				boat.SubstractLifePoints(1);
-				GridTable[key] = new Shot(key, true);
+				GridTable[key] = new Shot(key, ShotResult.Hit);
 			}
 			else
-				GridTable[key] = new Shot(key, false);
+				GridTable[key] = new Shot(key, ShotResult.Missed);
 		}
 
 		/// <summary>
-		/// Method used to get the string representation of the current Grid
+		/// Method used to make a shot in the playable grid.
 		/// </summary>
+		/// <param name="shot">Position of the shot</param>
 		/// <returns></returns>
-		public override string ToString()
+		public void AddShot(Shot shot)
 		{
-			int startingPoint = 0;
+			Position key = GridTable.Keys.First(p => p.Equals(shot.Position));
 
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-			string gridRepresentation = "    " + String.Join(" ", GridHorizontalScale) + "\n" + " " + GridVerticalScale[startingPoint];
-            //Console.ResetColor();
-			foreach (KeyValuePair<Position, object> keyValuePair in GridTable)
+			object result;
+			GridTable.TryGetValue(key, out result);
+
+			if (result is Boat)
 			{
-				object currentGridCell = keyValuePair.Value;
-				Position currentPosition = keyValuePair.Key;
-
-				if (currentPosition.Y != startingPoint)
-				{
-					gridRepresentation += "\n";
-					startingPoint = currentPosition.Y;
-					gridRepresentation += " " + GridVerticalScale[currentPosition.Y];
-				}
-
-				if (currentGridCell is null)
-					gridRepresentation += " -";
-				else if (currentGridCell is Boat)
-					gridRepresentation += $" {((Boat)currentGridCell).Representation}";
-				else if (currentGridCell is Shot)
-					gridRepresentation += " X";
-				else
-					throw new UnknownGridCellException();
+				Boat boat = (Boat)result;
+				boat.SubstractLifePoints(1);
+				GridTable[key] = shot;
 			}
-			return gridRepresentation;
+			else
+				GridTable[key] = shot;
 		}
 	}
 }

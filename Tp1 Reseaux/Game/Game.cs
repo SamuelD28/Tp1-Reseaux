@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using static System.Console;
+using System.IO;
 
 namespace Tp1_Reseaux
 {
@@ -176,25 +177,83 @@ namespace Tp1_Reseaux
 			{
 				Clear();
                 DrawBoard();
-				switch (CurrentState)
+				try
 				{
-					case GameState.Placing_Boat: HandleBoatPlacement(); break;
-					case GameState.My_Turn: HandleMyTurn(); break;
-					case GameState.Waiting: HandleWaiting(); break;
-					case GameState.Victory: HandleVictory(); break;
-					case GameState.Defeat: HandleDefeat(); break;
-					case GameState.Error: break;
+					switch (CurrentState)
+					{
+						case GameState.Placing_Boat: HandleBoatPlacement(); break;
+						case GameState.My_Turn: HandleMyTurn(); break;
+						case GameState.Waiting: HandleWaiting(); break;
+						case GameState.Victory: HandleVictory(); break;
+						case GameState.Defeat: HandleDefeat(); break;
+						case GameState.Error: break;
+					}
+					if (!SkipServerResponse)
+						ReadServerResponse();
+					else
+					{
+						CurrentState = GameState.Waiting;
+						SkipServerResponse = false;
+					}
 				}
-
-
-				if (!SkipServerResponse)
-					ReadServerResponse();
-				else
+				catch(ServerResponseException e)
 				{
-					CurrentState = GameState.Waiting;
-					SkipServerResponse = false;
+					//Handle the error...
+					DrawLog(ConsoleColor.Red, "Error processing response from the server");
+					Console.ReadLine();
+				}
+				catch(RequestMalformedException e)
+				{
+					//Handle the error...
+					DrawLog(ConsoleColor.Red, "Error processing the request to the server");
+					Console.ReadLine();
+				}
+				catch(TimeoutException e)
+				{
+					//Handle the error...
+					DrawLog(ConsoleColor.Red, "Server could not respond in time");
+					Console.ReadLine();
+				}
+				catch(IOException)
+				{
+					DrawLog(ConsoleColor.Red, "Lost connection with the server");
+					Console.ReadLine();
 				}
 			}
+		}
+		//---God Method that handle different game state--//
+
+		private void HandleMyTurn()
+		{
+			Position position = GetPlayerShot();
+			Response response = SendShotToServer(position);
+		}
+
+		private void HandleDefeat()
+		{
+			//Could do seomthing better
+			DrawInformationBox("YOU LOST", "YOU LOST");
+			WriteLine("Press a key to continue...");
+		}
+
+		private void HandleVictory()
+		{
+			//Could do something better
+			DrawInformationBox("YOU WON", "YOU WON");
+			WriteLine("Press a key to continue...");
+		}
+
+		private void HandleBoatPlacement()
+		{
+			GetPlayerBoats();
+			SendBoatsToServer();
+			SkipServerResponse = true; //Nasty shit
+		}
+
+		private void HandleWaiting()
+		{
+			//Do a better handling
+			DrawInformationBox($"Player 1 : Ready", "Player 2 : Placing Boats");
 		}
 
 		//---Methods that send information to the server---//
@@ -229,14 +288,14 @@ namespace Tp1_Reseaux
 				DrawLog(ConsoleColor.Red, response.Error);
 
 			if (response.ShotResult == ShotResult.Hit)
-				AddShotToMyHistory(new Shot(position, true));
+				AddShotToMyHistory(new Shot(position, ShotResult.Hit));
 			else if (response.ShotResult == ShotResult.Missed)
 			{
 				SkipServerResponse = true;
-				AddShotToMyHistory(new Shot(position, false));
+				AddShotToMyHistory(new Shot(position, ShotResult.Missed));
 			}
 			else if (response.ShotResult == ShotResult.Sunk)
-				AddShotToMyHistory(new Shot(position, true));
+				AddShotToMyHistory(new Shot(position, ShotResult.Sunk));
 
 			return response;
 		}
@@ -297,46 +356,6 @@ namespace Tp1_Reseaux
 			return GetPlayerPosition("Enter Shooting Coordinate : ");
 		}
 
-		//---God Method that handle different game state--//
-
-		private void HandleMyTurn()
-		{
-			Position position = GetPlayerShot();
-			Response response = SendShotToServer(position);
-
-			//Le serveur est juste inconsistent.
-			//Il renvoie le tour du joueur si son tir est un succes. Ce qui
-			//fait aucun sens honnetement. 
-			//if (response.ShotResult != ShotResult.Missed)
-			//	GetServerTurn(Client.Read());
-		}
-
-		private void HandleDefeat()
-		{
-			//Could do seomthing better
-			DrawInformationBox("YOU LOST", "YOU LOST");
-			WriteLine("Press a key to continue...");
-		}
-
-		private void HandleVictory()
-		{
-			//Could do something better
-			DrawInformationBox("YOU WON", "YOU WON");
-			WriteLine("Press a key to continue...");
-		}
-
-		private void HandleBoatPlacement()
-		{
-			GetPlayerBoats();
-			SendBoatsToServer();
-			SkipServerResponse = true; //Nasty shit
-		}
-
-		private void HandleWaiting()
-		{
-			//Do a better handling
-			DrawInformationBox($"Player 1 : Ready", "Player 2 : Placing Boats");
-		}
 
 		//---Methods that retrieve information from the server--//
 
@@ -379,7 +398,11 @@ namespace Tp1_Reseaux
 			else
 				response = Request.ParseResponse(serverResponse);
 
-			AddShotToOpponentHistory(new Shot(response.Position));
+			Shot shot = (response.ShotResult != ShotResult.Missed) 
+				? new Shot(response.Position, ShotResult.Hit) 
+				: new Shot(response.Position);
+
+			AddShotToOpponentHistory(shot);
 		}
 
 		private void GetServerGameResult(string serverResponse = null)
@@ -462,8 +485,10 @@ namespace Tp1_Reseaux
             Console.ForegroundColor = ConsoleColor.DarkRed; 
             Write(" ──────\n");
             Console.ResetColor();
-            WriteLine(GameGrid.ToString());
-            WriteLine();
+			DrawGrid(GameGrid);
+
+			WriteLine();
+
             Console.ForegroundColor = ConsoleColor.DarkRed;
             Write(" ───── ");
             Console.ResetColor();
@@ -471,8 +496,54 @@ namespace Tp1_Reseaux
             Console.ForegroundColor = ConsoleColor.DarkRed;
             Write(" ──────\n");
             Console.ResetColor();
-            WriteLine(ShootingGrid.ToString());
-            Console.ResetColor();
+			DrawGrid(ShootingGrid);
+
+			Console.ResetColor();
+		}
+
+		private void DrawGrid(Grid grid)
+		{
+			int startingPoint = 0;
+
+			ForegroundColor = ConsoleColor.DarkGray;
+			Write("    " + String.Join(" ", Grid.GridHorizontalScale) + "\n" + " " + Grid.GridVerticalScale[startingPoint]);
+			foreach (KeyValuePair<Position, object> keyValuePair in grid.GridTable)
+			{
+				ForegroundColor = ConsoleColor.DarkGray;
+				object currentGridCell = keyValuePair.Value;
+				Position currentPosition = keyValuePair.Key;
+
+				if (currentPosition.Y != startingPoint)
+				{
+					Write("\n");
+					startingPoint = currentPosition.Y;
+					Write(" " + Grid.GridVerticalScale[currentPosition.Y]);
+				}
+
+				if (currentGridCell is null)
+					Write(" -");
+				else if (currentGridCell is Boat)
+				{
+					ForegroundColor = ConsoleColor.White;
+					Write($" {((Boat)currentGridCell).Representation}");
+				}
+				else if (currentGridCell is Shot)
+				{
+					Shot shot = (Shot)currentGridCell;
+					if (shot.Result == ShotResult.Hit || shot.Result == ShotResult.Sunk)
+					{
+						ForegroundColor = ConsoleColor.DarkRed;
+						Write(" X");
+					}
+					else
+					{
+						ForegroundColor = ConsoleColor.Black;
+						Write("  ");
+					}
+				}
+				else
+					throw new UnknownGridCellException();
+			}
 		}
 
         private void DrawBoard()
@@ -504,13 +575,13 @@ namespace Tp1_Reseaux
 		private void AddShotToMyHistory(Shot shot)
 		{
 			MyShotHistory.Add(shot);
-			ShootingGrid.AddShot(shot.Position);
+			ShootingGrid.AddShot(shot);
 		}
 
 		private void AddShotToOpponentHistory(Shot shot)
 		{
 			OpponentShotHistory.Add(shot);
-			GameGrid.AddShot(shot.Position);
+			GameGrid.AddShot(shot);
 		}
 
 	}

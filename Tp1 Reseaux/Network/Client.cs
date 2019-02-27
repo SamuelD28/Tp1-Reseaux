@@ -8,18 +8,6 @@ using System.Timers;
 
 namespace Tp1_Reseaux
 {
-	//Should extract logic related to the player as it does not belong in this class
-
-	/// <summary>
-	/// Exception thrown when the client cant retrieve the
-	/// player assigned by the server.
-	/// </summary>
-	public class NoPlayerAssignedException : Exception
-	{
-		public NoPlayerAssignedException() { }
-		public NoPlayerAssignedException(string message) : base(message) { }
-	}
-
 	/// <summary>
 	/// Class that handle the client for communicating
 	/// with the server
@@ -58,10 +46,13 @@ namespace Tp1_Reseaux
 		/// </summary>
 		/// <param name="server">Ip adress of the server to connect to</param>
 		/// <param name="port">Port number of the server to connect to</param>
+		/// <exception cref="TimeoutException">Cant connect in time</exception>
 		/// <returns>True if the connection succeded</returns>
 		public bool Connect(string server, int port)
 		{
 			Tcp = new TcpClient();
+			Tcp.ReceiveTimeout = 5000;
+			Tcp.SendTimeout = 5000;
 			if (Tcp.ConnectAsync(server, port).Wait(2000))
 				InitClient();
 			else
@@ -107,36 +98,6 @@ namespace Tp1_Reseaux
 		/// Method for readign the stream from the server
 		/// </summary>
 		/// <returns>Stream from the server</returns>
-		public string Read()
-		{
-			return Reader.ReadLine();
-			//return Reader.ReadLine();
-			//if (Tcp.Available == 0)
-			//	return "";
-
-			//var tokenSource = new CancellationTokenSource();
-			//CancellationToken ct = tokenSource.Token;
-			//string result = null;
-			//Task readBuffer = Task.Factory.StartNew(() =>
-			//{
-			//	ct.ThrowIfCancellationRequested();
-
-			//	result = Reader.ReadLine();
-
-			//	if (ct.IsCancellationRequested)
-			//		ct.ThrowIfCancellationRequested();
-
-			//}, ct);
-			//while (result is null)
-			//{
-			//	if (!readBuffer.Wait(5000))
-			//	{
-			//		tokenSource.Cancel();
-			//		result = "";
-			//	}
-			//}
-			//return result;
-		}
-
+		public string Read() => Reader.ReadLine();
 	}
 }

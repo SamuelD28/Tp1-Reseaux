@@ -3,13 +3,17 @@ using System.Text.RegularExpressions;
 
 namespace Tp1_Reseaux
 {
+	/// <summary>
+	/// Enumeration of the all the possible request type
+	/// </summary>
 	public enum RequestType
 	{
 		Shot,
 		Boat,
 		Turn,
 		Won,
-		Wait
+		Wait,
+		Error
 	}
 
 	/// <summary>
@@ -20,13 +24,23 @@ namespace Tp1_Reseaux
 	/// <exception cref="RequestMalformedException">Request format was invalid and could not be parsed</exception>
 	public static class Request
 	{
+		//Contains the parse message that will be send to the server
 		public static string Message { get; private set; }
 
+		//Contains the current request type. Used to choose the proper parsing.
 		public static RequestType Type { get; private set; }
 
+		/// <summary>
+		/// Method that tries to best match the received response 
+		/// from to a proper request type.
+		/// </summary>
+		/// <param name="message">Server response</param>
+		/// <returns>Request type that best match or null if not match</returns>
 		public static RequestType? DetermineReceivedType(string message)
 		{
-			//THIS METHOD NEEDS TO BE IMPROVED. TOO CHEESY
+			if (message is null)
+				return null;
+
 			if (message.Contains("-"))
 				return RequestType.Shot;
 			else if (message == "WAIT")
@@ -35,10 +49,18 @@ namespace Tp1_Reseaux
 				return RequestType.Turn;
 			else if (message.EndsWith("WIN"))
 				return RequestType.Won;
+			else if (message.Length > 10)
+				return RequestType.Error;
 			else
 				return null;
 		}
 
+		/// <summary>
+		/// Method use the proper parser to parse the server response
+		/// based on the current request type.
+		/// </summary>
+		/// <param name="rawResponse">Server response</param>
+		/// <returns>Response object containing the parsed information</returns>
 		public static Response ParseResponse(string rawResponse)
 		{
 			Response response = new Response();
@@ -53,12 +75,20 @@ namespace Tp1_Reseaux
 			return response;
 		}
 
-		public static bool SetHeader(RequestType type)
-		{
-			Type = type;
-			return true;
-		}
+		/// <summary>
+		/// Method that set the current header type to the specified type
+		/// </summary>
+		/// <param name="type">Type to set the header</param>
+		public static void SetHeader(RequestType type) => Type = type;
 
+		/// <summary>
+		/// Method that set the current header type and message
+		/// to the specified ones.
+		/// </summary>
+		/// <param name="type">Type to set the header</param>
+		/// <param name="message">Message to set the header</param>
+		/// <returns>True if succesfully set the header and message</returns>
+		/// <exception cref="RequestMalformedException">Thrown when the parser encounter an error</exception>
 		public static bool SetHeader(RequestType type, string message)
 		{
 			Type = type;
@@ -115,6 +145,13 @@ namespace Tp1_Reseaux
 			return (firstPosition + "_" + secondPosition).ToUpper();
 		}
 
+		/// <summary>
+		/// Method that parse the incoming server response into
+		/// a shot response.
+		/// </summary>
+		/// <param name="message">Response from the server</param>
+		/// <param name="response">Response object containing the parsed information</param>
+		/// <exception cref="ServerResponseException">The server response was incorrect</exception>
 		private static void ParseShotResponse(string message, ref Response response)
 		{
 			Regex regex = new Regex("^(J[1-z])-([A-J][0-9]{1,2})-(FIRE|MISS|SUNK)$");
@@ -139,6 +176,12 @@ namespace Tp1_Reseaux
 			}
 		}
 
+		/// <summary>
+		/// Method that parse the server response into a won response.
+		/// </summary>
+		/// <param name="message">Response from the server</param>
+		/// <param name="response">Response object containing the parsed information</param>
+		/// <exception cref="ServerResponseException">The server response was incorrect</exception>
 		public static void ParseWonResponse(string message, ref Response response)
 		{
 			Regex regex = new Regex("^([a-zA-Z][1-9]) (WIN)$");
@@ -166,6 +209,12 @@ namespace Tp1_Reseaux
 			response.Player = player;
 		}
 
+		/// <summary>
+		/// Method that parse the server response into a boat response.
+		/// </summary>
+		/// <param name="message">Response from the server</param>
+		/// <param name="response">Response object containing the parsed information</param>
+		/// <exception cref="ServerResponseException">Server response was incorrect</exception>
 		private static void ParseBoatResponse(string message, ref Response response)
 		{
 			if (message.ToUpper() == "SUCCES")
@@ -184,12 +233,18 @@ namespace Tp1_Reseaux
 		}
 	}
 
+	/// <summary>
+	/// Exception class used to signify that the server response was invalid or unexpected.
+	/// </summary>
 	public class ServerResponseException : Exception
 	{
 		public ServerResponseException() { }
 		public ServerResponseException(string message) : base(message) { }
 	}
 
+	/// <summary>
+	/// Exception class used to signify that request message could not be parsed into a proper protocol message
+	/// </summary>
 	public class RequestMalformedException : Exception
 	{
 		public RequestMalformedException() { }

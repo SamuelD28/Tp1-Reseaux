@@ -57,21 +57,18 @@ namespace Tp1_Reseaux
 				case BoatType.Torpedo:
 				case BoatType.Submarine:
 					LifePoints = 3;
-					Representation = '3';
 				break;
 				case BoatType.CounterTorpedo:
 					LifePoints = 2;
-					Representation = '2';
 				break;
 				case BoatType.AircraftCarrier:
 					LifePoints = 5;
-					Representation = '5';
 				break;
 				case BoatType.Destroyer:
 					LifePoints = 4;
-					Representation = '4';
 				break;
 			}
+			Representation = '■';
 		}
 
 		public void AssignPlacement(Position first, Position second)
