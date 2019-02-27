@@ -232,14 +232,14 @@ namespace Tp1_Reseaux
 		private void HandleDefeat()
 		{
 			//Could do seomthing better
-			DrawInformationBox("YOU LOST", "YOU LOST");
+			DrawInformationBox("YOU LOST", "");
 			WriteLine("Press a key to continue...");
 		}
 
 		private void HandleVictory()
 		{
 			//Could do something better
-			DrawInformationBox("YOU WON", "YOU WON");
+			DrawInformationBox("YOU WON", "");
 			WriteLine("Press a key to continue...");
 		}
 
@@ -254,6 +254,11 @@ namespace Tp1_Reseaux
 		{
 			//Do a better handling
 			DrawInformationBox($"Player 1 : Ready", "Player 2 : Placing Boats");
+
+            //if (GameGrid.GridTable.Count < 5)
+            //{
+            //    DrawInformationBox("Joueur 1 : Placing boats", "Joueurs");
+            //}
 		}
 
 		//---Methods that send information to the server---//
@@ -350,8 +355,8 @@ namespace Tp1_Reseaux
 			Shot lastShotPlayerTwo = (OpponentShotHistory.Count > 0) ? OpponentShotHistory.Last() : null;
 
 			DrawInformationBox(
-				$"Payer One Last Shot : {(lastShotPlayerOne != null ? lastShotPlayerOne.ToString() : "No shot yet")}",
-				$"Player Two Last Shot : {(lastShotPlayerTwo != null ? lastShotPlayerTwo.ToString() : "No shot yet")}");
+				$"Your last shot : {(lastShotPlayerOne != null ? lastShotPlayerOne.ToString() : "No shot yet")}",
+				$"Opponent last shot : {(lastShotPlayerTwo != null ? lastShotPlayerTwo.ToString() : "No shot yet")}");
 
 			return GetPlayerPosition("Enter Shooting Coordinate : ");
 		}
@@ -471,7 +476,11 @@ namespace Tp1_Reseaux
             Write(" ├┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴");
             Console.ForegroundColor = ConsoleColor.Gray;
             Write("║");
-            WriteLine("\n╚══════════════════════════════════════════════════════════════════════╝");
+            WriteLine("\n╚═══════════════════════════════╗      ╔═══════════════════════════════╝");
+            WriteLine($"                                ║  {CurrentPlayer}  ║                               ");
+            WriteLine("                                ╚══════╝                               ");
+
+
             WriteLine();
             Console.ResetColor();
         }
@@ -488,6 +497,7 @@ namespace Tp1_Reseaux
 			DrawGrid(GameGrid);
 
 			WriteLine();
+			WriteLine();
 
             Console.ForegroundColor = ConsoleColor.DarkRed;
             Write(" ───── ");
@@ -497,7 +507,7 @@ namespace Tp1_Reseaux
             Write(" ──────\n");
             Console.ResetColor();
 			DrawGrid(ShootingGrid);
-
+            WriteLine();
 			Console.ResetColor();
 		}
 
@@ -560,7 +570,7 @@ namespace Tp1_Reseaux
 					  $"║".PadRight(50) + "║\n" +
 					  $"║ {header}".PadRight(50) + "║\n" +
 					  $"║ {body}".PadRight(50) + "║\n" +
-					  $"╚".PadRight(50, '═') + "╝\n");
+                      $"╚".PadRight(50, '═') + "╝\n");
 		}
 
 		private void DrawLog(ConsoleColor color, string message)
