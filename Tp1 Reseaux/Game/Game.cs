@@ -214,11 +214,11 @@ namespace Tp1_Reseaux
 					DrawLog(ConsoleColor.Red, "Server could not respond in time");
 					Console.ReadLine();
 				}
-				catch(IOException)
-				{
-					DrawLog(ConsoleColor.Red, "Lost connection with the server");
-					Console.ReadLine();
-				}
+				//catch(IOException)
+				//{
+				//	DrawLog(ConsoleColor.Red, "Lost connection with the server");
+				//	Console.ReadLine();
+				//}
 			}
 		}
 		//---God Method that handle different game state--//
