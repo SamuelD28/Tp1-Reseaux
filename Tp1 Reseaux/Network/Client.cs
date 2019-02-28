@@ -1,19 +1,15 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Timers;
 
 namespace Tp1_Reseaux
 {
-	/// <summary>
-	/// Class that handle the client for communicating
-	/// with the server
-	/// </summary>
-	/// <exception cref="TimeoutException">The server could not connect with the client in time</exception>
-	public sealed class Client
+    /// <summary>
+    /// Class that handle the client for communicating
+    /// with the server
+    /// </summary>
+    /// <exception cref="TimeoutException">The server could not connect with the client in time</exception>
+    public sealed class Client
 	{
 		//Indicate that the connection is open or close
 		public bool IsOpen => Tcp.Connected;
