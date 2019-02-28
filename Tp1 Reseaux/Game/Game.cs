@@ -179,7 +179,7 @@ namespace Tp1_Reseaux
 			while (Client.IsOpen || CurrentState == GameState.Restart)
 			{
 				Clear();
-                DrawBoard();
+				DrawBoard();
 				try
 				{
 					switch (CurrentState)
@@ -200,19 +200,19 @@ namespace Tp1_Reseaux
 						SkipServerResponse = false;
 					}
 				}
-				catch(ServerResponseException e)
+				catch (ServerResponseException e)
 				{
 					//Handle the error...
 					DrawLog(ConsoleColor.Red, "Error processing response from the server");
 					Console.ReadLine();
 				}
-				catch(RequestMalformedException e)
+				catch (RequestMalformedException e)
 				{
 					//Handle the error...
 					DrawLog(ConsoleColor.Red, "Error processing the request to the server");
 					Console.ReadLine();
 				}
-				catch(TimeoutException e)
+				catch (TimeoutException e)
 				{
 					//Handle the error...
 					DrawLog(ConsoleColor.Red, "Server could not respond in time");
@@ -337,8 +337,8 @@ namespace Tp1_Reseaux
 			//Loop until all the boats are mark as placed
 			while (Boats.Exists(b => !b.IsPlaced))
 			{
-                Clear();
-                DrawBoard();
+				Clear();
+				DrawBoard();
 
 				Boat boat = Boats.Find(b => !b.IsPlaced);
 				DrawInformationBox($"Placing : {boat.Type.ToString()}", $"Length : {boat.LifePoints}");
@@ -411,8 +411,8 @@ namespace Tp1_Reseaux
 			else
 				response = Request.ParseResponse(serverResponse);
 
-			Shot shot = (response.ShotResult != ShotResult.Missed) 
-				? new Shot(response.Position, ShotResult.Hit) 
+			Shot shot = (response.ShotResult != ShotResult.Missed)
+				? new Shot(response.Position, ShotResult.Hit)
 				: new Shot(response.Position);
 
 			AddShotToOpponentHistory(shot);
@@ -471,60 +471,75 @@ namespace Tp1_Reseaux
 			Clear();
 		}
 
-        private void DrawHeader()
-        {
-            WriteLine("╔══════════════════════════════════════════════════════════════════════╗");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Write("║");
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Write("┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┤ ");
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Write("BATTLESHIP");
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Write(" ├┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Write("║");
-            WriteLine("\n╚═══════════════════════════════╗      ╔═══════════════════════════════╝");
-            WriteLine($"                                ║  {CurrentPlayer}  ║                               ");
-            WriteLine("                                ╚══════╝                               ");
-
-
-            WriteLine();
-            Console.ResetColor();
-        }
-
-		private void DrawGrids()
+		private void DrawHeader()
 		{
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Write(" ───── ");
-            Console.ResetColor();
-            Write("Your grid");
-            Console.ForegroundColor = ConsoleColor.DarkRed; 
-            Write(" ──────\n");
-            Console.ResetColor();
-			DrawGrid(GameGrid);
+			WriteLine("╔══════════════════════════════════════════════════════════════════════╗"); //72
+			Console.ForegroundColor = ConsoleColor.Gray;
+			Write("║");
+			Console.ForegroundColor = ConsoleColor.DarkGray;
+			Write("┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┤ ");
+			Console.ForegroundColor = ConsoleColor.DarkRed;
+			Write("BATTLESHIP");
+			Console.ForegroundColor = ConsoleColor.DarkGray;
+			Write(" ├┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴");
+			Console.ForegroundColor = ConsoleColor.Gray;
+			Write("║");
+			WriteLine("\n╚═══════════════════════════════╗      ╔═══════════════════════════════╝");
+			WriteLine($"                                ║  {CurrentPlayer}  ║                               ");
+			WriteLine("                                ╚══════╝                               ");
+
 
 			WriteLine();
-			WriteLine();
-
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Write(" ───── ");
-            Console.ResetColor();
-            Write("Shots done");
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Write(" ──────\n");
-            Console.ResetColor();
-			DrawGrid(ShootingGrid);
-            WriteLine();
 			Console.ResetColor();
 		}
 
-		private void DrawGrid(Grid grid)
+		private void DrawGrids()
 		{
+			DrawGridHeader("The Boats");
+			DrawGrid(GameGrid, 0, CursorTop);
+
+
+			SetCursorPosition(49, 6);
+			DrawGridHeader("The Shots");
+			DrawGrid(ShootingGrid, 49, 7);
+
+			Console.ResetColor();
+			WriteLine();
+		}
+
+		private void DrawGridHeader(string gridHeader)
+		{
+			Console.ForegroundColor = ConsoleColor.DarkRed;
+			Write(" ───── ");
+			Console.ResetColor();
+			Write(gridHeader);
+			Console.ForegroundColor = ConsoleColor.DarkRed;
+			Write(" ──────\n");
+			Console.ResetColor();
+		}
+
+		private void DrawGridFooter()
+		{
+			Console.ForegroundColor = ConsoleColor.DarkRed;
+			Write(" ──────────────────────");
+			Console.ResetColor();
+		}
+
+		private void DrawGrid(Grid grid, int indentLeft, int indentTop)
+		{
+			int temp = indentLeft;
 			int startingPoint = 0;
 
+			CursorTop = indentTop;
+			SetCursorPosition(indentLeft, CursorTop);
+
 			ForegroundColor = ConsoleColor.DarkGray;
-			Write("    " + String.Join(" ", Grid.GridHorizontalScale) + "\n" + " " + Grid.GridVerticalScale[startingPoint]);
+
+			Write(" ▒  " + String.Join(" ", Grid.GridHorizontalScale));
+			CursorTop = CursorTop + 1;
+			SetCursorPosition(indentLeft, CursorTop);
+			Write(" " + Grid.GridVerticalScale[startingPoint]);
+
 			foreach (KeyValuePair<Position, object> keyValuePair in grid.GridTable)
 			{
 				ForegroundColor = ConsoleColor.DarkGray;
@@ -533,10 +548,13 @@ namespace Tp1_Reseaux
 
 				if (currentPosition.Y != startingPoint)
 				{
-					Write("\n");
+					CursorTop = CursorTop + 1;
+					SetCursorPosition(indentLeft, CursorTop);
+
 					startingPoint = currentPosition.Y;
 					Write(" " + Grid.GridVerticalScale[currentPosition.Y]);
 				}
+
 
 				if (currentGridCell is null)
 					Write(" -");
@@ -561,24 +579,29 @@ namespace Tp1_Reseaux
 				}
 				else
 					throw new UnknownGridCellException();
+
 			}
+
+			CursorTop = CursorTop +1;
+			SetCursorPosition(indentLeft, CursorTop);
+			DrawGridFooter();
 		}
 
-        private void DrawBoard()
-        {
-            DrawHeader();
-            DrawGrids();
-        }
+		private void DrawBoard()
+		{
+			DrawHeader();
+			DrawGrids();
+		}
 
 		private void DrawInformationBox(string header, string body)
 		{
 			Write("\n");
-			WriteLine($"╔".PadRight(50, '═') + "╗\n" +
-					  $"║ Status : {CurrentState}".PadRight(50) + "║\n" +
-					  $"║".PadRight(50) + "║\n" +
-					  $"║ {header}".PadRight(50) + "║\n" +
-					  $"║ {body}".PadRight(50) + "║\n" +
-                      $"╚".PadRight(50, '═') + "╝\n");
+			WriteLine($"╔".PadRight(72, '═') + "╗\n" +
+					  $"║ Status : {CurrentState}".PadRight(72) + "║\n" +
+					  $"║".PadRight(72) + "║\n" +
+					  $"║ {header}".PadRight(72) + "║\n" +
+					  $"║ {body}".PadRight(72) + "║\n" +
+					  $"╚".PadRight(72, '═') + "╝\n");
 		}
 
 		private void DrawLog(ConsoleColor color, string message)
