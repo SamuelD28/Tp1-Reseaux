@@ -573,8 +573,8 @@ namespace Tp1_Reseaux
 					}
 					else
 					{
-						ForegroundColor = ConsoleColor.Black;
-						Write("  ");
+						ForegroundColor = ConsoleColor.White;
+						Write(" o");
 					}
 				}
 				else
