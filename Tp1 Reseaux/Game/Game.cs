@@ -27,7 +27,8 @@ namespace Tp1_Reseaux
 			Defeat,
 			Error,
 			My_Turn,
-			Waiting
+			Waiting,
+			Restart
 		}
 
 		//Contains the client instance used for communication with the server
@@ -85,6 +86,7 @@ namespace Tp1_Reseaux
 		/// </summary>
 		private Game()
 		{
+			CurrentState = GameState.Setup;
 			CurrentIp = DEFAULT_IP;
 			CurrentPort = DEFAULT_PORT;
 		}
@@ -129,6 +131,7 @@ namespace Tp1_Reseaux
 		/// </summary>
 		public void Setup()
 		{
+			Clear();
 			CurrentState = GameState.Setup;
 			for (; ; )
 			{
@@ -173,7 +176,7 @@ namespace Tp1_Reseaux
 		/// </summary>
 		private void Play()
 		{
-			while (Client.IsOpen)
+			while (Client.IsOpen || CurrentState == GameState.Restart)
 			{
 				Clear();
                 DrawBoard();
@@ -186,6 +189,7 @@ namespace Tp1_Reseaux
 						case GameState.Waiting: HandleWaiting(); break;
 						case GameState.Victory: HandleVictory(); break;
 						case GameState.Defeat: HandleDefeat(); break;
+						case GameState.Restart: HandleRestart(); break;
 						case GameState.Error: break;
 					}
 					if (!SkipServerResponse)
@@ -212,16 +216,25 @@ namespace Tp1_Reseaux
 				{
 					//Handle the error...
 					DrawLog(ConsoleColor.Red, "Server could not respond in time");
-					Console.ReadLine();
 				}
-				//catch(IOException)
-				//{
-				//	DrawLog(ConsoleColor.Red, "Lost connection with the server");
-				//	Console.ReadLine();
-				//}
+				catch (IOException)
+				{
+					DrawLog(ConsoleColor.Red, $"[{DateTime.Now}] Lost connection with the server");
+					Write("Would you like to reconnect? [Y/N] : ");
+					char answer = ReadKey().KeyChar;
+
+					if (Char.ToUpper(answer) == 'Y')
+						CurrentState = GameState.Restart;
+				}
 			}
 		}
 		//---God Method that handle different game state--//
+
+		private void HandleRestart()
+		{
+			Setup();
+			Start();
+		}
 
 		private void HandleMyTurn()
 		{

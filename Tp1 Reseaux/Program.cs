@@ -15,12 +15,9 @@ namespace Tp1_Reseaux
                 Math.Min(75, Console.LargestWindowWidth),
                 Math.Min(50, Console.LargestWindowHeight));
 
-            Game game = Game.GetInstance();
+            Game.GetInstance().Setup();
+            Game.GetInstance().Start();
 
-			game.Setup();
-
-			if (!game.Start())
-				WriteLine("Cant launch game");
 		}
     }
 }
