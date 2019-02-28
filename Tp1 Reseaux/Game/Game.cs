@@ -266,12 +266,7 @@ namespace Tp1_Reseaux
 		private void HandleWaiting()
 		{
 			//Do a better handling
-			DrawInformationBox($"Player 1 : Ready", "Player 2 : Placing Boats");
-
-            //if (GameGrid.GridTable.Count < 5)
-            //{
-            //    DrawInformationBox("Joueur 1 : Placing boats", "Joueurs");
-            //}
+			DrawInformationBox($"Wait your turn", "");
 		}
 
 		//---Methods that send information to the server---//
