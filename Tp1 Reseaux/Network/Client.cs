@@ -51,8 +51,6 @@ namespace Tp1_Reseaux
 		public bool Connect(string server, int port)
 		{
 			Tcp = new TcpClient();
-			//Tcp.ReceiveTimeout = 5000; BUG////
-			//Tcp.SendTimeout = 5000; BUG////
 			if (Tcp.ConnectAsync(server, port).Wait(2000))
 				InitClient();
 			else
