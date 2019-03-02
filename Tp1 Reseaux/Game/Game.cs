@@ -106,7 +106,7 @@ namespace Tp1_Reseaux
 			else
 				CurrentIp = ipAdress;
 
-			DrawLog(ConsoleColor.DarkGreen, $"Using IP [{CurrentIp}]");
+            Draw.DrawLog(ConsoleColor.DarkGreen, $"Using IP [{CurrentIp}]");
 		}
 
 		/// <summary>
@@ -123,7 +123,7 @@ namespace Tp1_Reseaux
 			else
 				CurrentPort = portNumber;
 
-			DrawLog(ConsoleColor.DarkGreen, $"Using Port [{CurrentPort}]");
+            Draw.DrawLog(ConsoleColor.DarkGreen, $"Using Port [{CurrentPort}]");
 		}
 
 		/// <summary>
@@ -140,15 +140,15 @@ namespace Tp1_Reseaux
 				try
 				{
 					Client.Connect(CurrentIp, CurrentPort);
-					DrawLog(ConsoleColor.DarkGreen, "Connected to the server");
+                    Draw.DrawLog(ConsoleColor.DarkGreen, "Connected to the server");
 					CurrentPlayer = "J" + Client.Read();
-					DrawLog(ConsoleColor.Blue, $"You are {CurrentPlayer}");
+                    Draw.DrawLog(ConsoleColor.Blue, $"You are {CurrentPlayer}");
 					CurrentState = GameState.Ready;
 					break;
 				}
 				catch (Exception e)
 				{
-					DrawLog(ConsoleColor.Red, $"Cant connect to the server.\n{e.Message}");
+                    Draw.DrawLog(ConsoleColor.Red, $"Cant connect to the server.\n{e.Message}");
 				}
 			}
 		}
@@ -161,7 +161,7 @@ namespace Tp1_Reseaux
 		{
 			if (Client.IsOpen && CurrentState == GameState.Ready)
 			{
-				DrawLaunchMessage();
+                Draw.DrawLaunchMessage();
 				CurrentState = GameState.Placing_Boat;
 				Play();
 				return true;
@@ -179,7 +179,7 @@ namespace Tp1_Reseaux
 			while (Client.IsOpen || CurrentState == GameState.Restart)
 			{
 				Clear();
-				DrawBoard();
+                Draw.DrawBoard(CurrentPlayer.ToString(), GameGrid, ShootingGrid);
 				try
 				{
 					switch (CurrentState)
@@ -202,24 +202,24 @@ namespace Tp1_Reseaux
 				}
 				catch (ServerResponseException e)
 				{
-					//Handle the error...
-					DrawLog(ConsoleColor.Red, "Error processing response from the server");
+                    //Handle the error...
+                    Draw.DrawLog(ConsoleColor.Red, "Error processing response from the server");
 					Console.ReadLine();
 				}
 				catch (RequestMalformedException e)
 				{
-					//Handle the error...
-					DrawLog(ConsoleColor.Red, "Error processing the request to the server");
+                    //Handle the error...
+                    Draw.DrawLog(ConsoleColor.Red, "Error processing the request to the server");
 					Console.ReadLine();
 				}
 				catch (TimeoutException e)
 				{
-					//Handle the error...
-					DrawLog(ConsoleColor.Red, "Server could not respond in time");
+                    //Handle the error...
+                    Draw.DrawLog(ConsoleColor.Red, "Server could not respond in time");
 				}
 				catch (IOException)
 				{
-					DrawLog(ConsoleColor.Red, $"[{DateTime.Now}] Lost connection with the server");
+                    Draw.DrawLog(ConsoleColor.Red, $"[{DateTime.Now}] Lost connection with the server");
 					Write("Would you like to reconnect? [Y/N] : ");
 					char answer = ReadKey().KeyChar;
 
@@ -244,15 +244,15 @@ namespace Tp1_Reseaux
 
 		private void HandleDefeat()
 		{
-			//Could do seomthing better
-			DrawInformationBox("YOU LOST", "");
+            //Could do seomthing better
+            Draw.DrawInformationBox("YOU LOST", "", CurrentState.ToString());
 			WriteLine("Press a key to continue...");
 		}
 
 		private void HandleVictory()
 		{
-			//Could do something better
-			DrawInformationBox("YOU WON", "");
+            //Could do something better
+            Draw.DrawInformationBox("YOU WON", "", CurrentState.ToString());
 			WriteLine("Press a key to continue...");
 		}
 
@@ -266,7 +266,7 @@ namespace Tp1_Reseaux
 		private void HandleWaiting()
 		{
 			//Do a better handling
-			DrawInformationBox($"Wait your turn", "");
+			Draw.DrawInformationBox($"Wait your turn", "", CurrentState.ToString());
 		}
 
 		//---Methods that send information to the server---//
@@ -283,7 +283,7 @@ namespace Tp1_Reseaux
 				Response response = Request.ParseResponse(Client.Read());
 				//Do a better handling of the request
 				if (!response.Success)
-					DrawLog(ConsoleColor.Red, response.Error);
+					Draw.DrawLog(ConsoleColor.Red, response.Error);
 
 			}
 		}
@@ -298,7 +298,7 @@ namespace Tp1_Reseaux
 			Response response = Request.ParseResponse(Client.Read());
 			//Do a better handling of the response in case of an error.
 			if (!response.Success)
-				DrawLog(ConsoleColor.Red, response.Error);
+				Draw.DrawLog(ConsoleColor.Red, response.Error);
 
 			if (response.ShotResult == ShotResult.Hit)
 				AddShotToMyHistory(new Shot(position, ShotResult.Hit));
@@ -344,10 +344,12 @@ namespace Tp1_Reseaux
 			while (Boats.Exists(b => !b.IsPlaced))
 			{
 				Clear();
-				DrawBoard();
+				Draw.DrawBoard(CurrentPlayer.ToString(), GameGrid, ShootingGrid);
 
 				Boat boat = Boats.Find(b => !b.IsPlaced);
-				DrawInformationBox($"Placing : {boat.Type.ToString()}", $"Length : {boat.LifePoints}");
+				Draw.DrawInformationBox($"Placing : {boat.Type.ToString()}", 
+                                        $"Length : {boat.LifePoints}", 
+                                         CurrentState.ToString());
 
 				//----Used for testing purposes only-----//
 				if (UseDefaultPlacements()) break;
@@ -368,9 +370,10 @@ namespace Tp1_Reseaux
 			Shot lastShotPlayerOne = (MyShotHistory.Count > 0) ? MyShotHistory.Last() : null;
 			Shot lastShotPlayerTwo = (OpponentShotHistory.Count > 0) ? OpponentShotHistory.Last() : null;
 
-			DrawInformationBox(
+			Draw.DrawInformationBox(
 				$"Your last shot : {(lastShotPlayerOne != null ? lastShotPlayerOne.ToString() : "No shot yet")}",
-				$"Opponent last shot : {(lastShotPlayerTwo != null ? lastShotPlayerTwo.ToString() : "No shot yet")}");
+				$"Opponent last shot : {(lastShotPlayerTwo != null ? lastShotPlayerTwo.ToString() : "No shot yet")}",
+                CurrentState.ToString());
 
 			return GetPlayerPosition("Enter Shooting Coordinate : ");
 		}
@@ -446,7 +449,7 @@ namespace Tp1_Reseaux
 
 			if (response.Length > 0 && char.ToUpper(response[0]) == 'Y')
 			{
-				DrawLog(ConsoleColor.DarkGreen, "Placing boats...");
+				Draw.DrawLog(ConsoleColor.DarkGreen, "Placing boats...");
 				for (int i = 0; i < Boats.Count; i++)
 				{
 					GameGrid.AddBoat(Boats[i], SEED_Positions[i, 0], SEED_Positions[i, 1]);
@@ -458,165 +461,7 @@ namespace Tp1_Reseaux
 				return false;
 		}
 
-		//---Methods that draws in the console. Refactor in static class---//
-
-		/// <summary>
-		/// Method that display the launch message in the console
-		/// </summary>
-		private void DrawLaunchMessage()
-		{
-			CurrentState = GameState.Launching;
-			string launchMessage = "Launching";
-			Write(launchMessage);
-			for (int i = 0; i < 8; i++)
-			{
-				Write(".");
-				System.Threading.Thread.Sleep(250);
-			}
-			Clear();
-		}
-
-		private void DrawHeader()
-		{
-			WriteLine("╔══════════════════════════════════════════════════════════════════════╗"); //72
-			Console.ForegroundColor = ConsoleColor.Gray;
-			Write("║");
-			Console.ForegroundColor = ConsoleColor.DarkGray;
-			Write("┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┤ ");
-			Console.ForegroundColor = ConsoleColor.DarkRed;
-			Write("BATTLESHIP");
-			Console.ForegroundColor = ConsoleColor.DarkGray;
-			Write(" ├┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴┬┴");
-			Console.ForegroundColor = ConsoleColor.Gray;
-			Write("║");
-			WriteLine("\n╚═══════════════════════════════╗      ╔═══════════════════════════════╝");
-			WriteLine($"                                ║  {CurrentPlayer}  ║                               ");
-			WriteLine("                                ╚══════╝                               ");
-
-
-			WriteLine();
-			Console.ResetColor();
-		}
-
-		private void DrawGrids()
-		{
-			DrawGridHeader("The Boats");
-			DrawGrid(GameGrid, 0, CursorTop);
-
-
-			SetCursorPosition(49, 6);
-			DrawGridHeader("The Shots");
-			DrawGrid(ShootingGrid, 49, 7);
-
-			Console.ResetColor();
-			WriteLine();
-		}
-
-		private void DrawGridHeader(string gridHeader)
-		{
-			Console.ForegroundColor = ConsoleColor.DarkRed;
-			Write(" ───── ");
-			Console.ResetColor();
-			Write(gridHeader);
-			Console.ForegroundColor = ConsoleColor.DarkRed;
-			Write(" ──────\n");
-			Console.ResetColor();
-		}
-
-		private void DrawGridFooter()
-		{
-			Console.ForegroundColor = ConsoleColor.DarkRed;
-			Write(" ──────────────────────");
-			Console.ResetColor();
-		}
-
-		private void DrawGrid(Grid grid, int indentLeft, int indentTop)
-		{
-			int temp = indentLeft;
-			int startingPoint = 0;
-
-			CursorTop = indentTop;
-			SetCursorPosition(indentLeft, CursorTop);
-
-			ForegroundColor = ConsoleColor.DarkGray;
-
-			Write(" ▒  " + String.Join(" ", Grid.GridHorizontalScale));
-			CursorTop = CursorTop + 1;
-			SetCursorPosition(indentLeft, CursorTop);
-			Write(" " + Grid.GridVerticalScale[startingPoint]);
-
-			foreach (KeyValuePair<Position, object> keyValuePair in grid.GridTable)
-			{
-				ForegroundColor = ConsoleColor.DarkGray;
-				object currentGridCell = keyValuePair.Value;
-				Position currentPosition = keyValuePair.Key;
-
-				if (currentPosition.Y != startingPoint)
-				{
-					CursorTop = CursorTop + 1;
-					SetCursorPosition(indentLeft, CursorTop);
-
-					startingPoint = currentPosition.Y;
-					Write(" " + Grid.GridVerticalScale[currentPosition.Y]);
-				}
-
-
-				if (currentGridCell is null)
-					Write(" -");
-				else if (currentGridCell is Boat)
-				{
-					ForegroundColor = ConsoleColor.White;
-					Write($" {((Boat)currentGridCell).Representation}");
-				}
-				else if (currentGridCell is Shot)
-				{
-					Shot shot = (Shot)currentGridCell;
-					if (shot.Result == ShotResult.Hit || shot.Result == ShotResult.Sunk)
-					{
-						ForegroundColor = ConsoleColor.DarkRed;
-						Write(" X");
-					}
-					else
-					{
-						ForegroundColor = ConsoleColor.White;
-						Write(" o");
-					}
-				}
-				else
-					throw new UnknownGridCellException();
-
-			}
-
-			CursorTop = CursorTop +1;
-			SetCursorPosition(indentLeft, CursorTop);
-			DrawGridFooter();
-		}
-
-		private void DrawBoard()
-		{
-			DrawHeader();
-			DrawGrids();
-		}
-
-		private void DrawInformationBox(string header, string body)
-		{
-			Write("\n");
-			WriteLine($"╔".PadRight(72, '═') + "╗\n" +
-					  $"║ Status : {CurrentState}".PadRight(72) + "║\n" +
-					  $"║".PadRight(72) + "║\n" +
-					  $"║ {header}".PadRight(72) + "║\n" +
-					  $"║ {body}".PadRight(72) + "║\n" +
-					  $"╚".PadRight(72, '═') + "╝\n");
-		}
-
-		private void DrawLog(ConsoleColor color, string message)
-		{
-			ForegroundColor = color;
-			WriteLine(message);
-			ResetColor();
-		}
-
-		//---Various other methods used by the class---//
+  		//---Various other methods used by the class---//
 
 		private void AddShotToMyHistory(Shot shot)
 		{
@@ -629,6 +474,5 @@ namespace Tp1_Reseaux
 			OpponentShotHistory.Add(shot);
 			GameGrid.AddShot(shot);
 		}
-
 	}
 }
