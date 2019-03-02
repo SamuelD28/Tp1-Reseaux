@@ -16,7 +16,7 @@
 		}
 		public bool Success { get; set; }
 		public Position Position { get; set; } 
-		public string Player { get; set; } //Should do an enum to simplify
+		public string Player { get; set; } 
 		public ShotResult ShotResult { get; set; }
 		public string Error { get; set; }
 	}

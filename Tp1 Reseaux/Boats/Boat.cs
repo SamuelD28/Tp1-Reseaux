@@ -2,10 +2,22 @@
 
 namespace Tp1_Reseaux
 {
+	/// <summary>
+	/// Exception thrown when you try to get the placement of the boat
+	/// when there is not associated coordinate.
+	/// </summary>
 	public class BoatNotPlacedException : Exception
 	{
-		public BoatNotPlacedException() { }
-		public BoatNotPlacedException(string message) : base(message) { }
+		//Boat that threw the exception
+		public Boat Boat { get; private set; }
+		public BoatNotPlacedException(Boat boat)
+		{
+			Boat = boat;
+		}
+		public BoatNotPlacedException(string message, Boat boat) : base(message) 
+		{
+			Boat = boat;
+		}
 	}
 
 	/// <summary>
@@ -37,11 +49,13 @@ namespace Tp1_Reseaux
 		//Indicate that the boat is sunk.
 		public bool Sunk => LifePoints <= 0;
 
+		//Console representation of the boat
 		public char Representation { get; private set; }
 
 		//Type of the current boat
 		public BoatType Type { get; private set; }
 
+		//Contains the start and end position of the boat inside the grid.
 		private Position[] Placement { get; set; }
 
 		/// <summary>
@@ -71,6 +85,11 @@ namespace Tp1_Reseaux
 			Representation = '■';
 		}
 
+		/// <summary>
+		/// Method used to assign a placement to the boat.
+		/// </summary>
+		/// <param name="first">Starting position of the boat</param>
+		/// <param name="second">Ending position of the boat</param>
 		public void AssignPlacement(Position first, Position second)
 		{
 			//We make sure that first position is place at index 0 and the furthest at index 1
@@ -81,6 +100,10 @@ namespace Tp1_Reseaux
 			Placement[1] = furthestPoint;
 		}
 
+		/// <summary>
+		/// Method that substract n ammount of life points from the boat
+		/// </summary>
+		/// <param name="damage"></param>
 		public void SubstractLifePoints(int damage)
 		{
 			if (LifePoints - damage < 0)
@@ -97,7 +120,7 @@ namespace Tp1_Reseaux
 		public string GetPlacement()
 		{
 			if (Placement[0] is null || Placement[1] is null)
-				throw new BoatNotPlacedException();
+				throw new BoatNotPlacedException(this);
 
 			return Placement[0].ToString() + Placement[1].ToString();
 		}

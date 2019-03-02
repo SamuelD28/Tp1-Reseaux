@@ -12,7 +12,6 @@ namespace Tp1_Reseaux
 
             Game.GetInstance().Setup();
             Game.GetInstance().Start();
-
 		}
     }
 }

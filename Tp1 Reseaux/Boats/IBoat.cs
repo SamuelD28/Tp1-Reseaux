@@ -1,5 +1,8 @@
 ﻿namespace Tp1_Reseaux
 {
+	/// <summary>
+	/// Interface for the creating a new boat class
+	/// </summary>
 	public interface IBoat
 	{
 		bool IsPlaced { get; }

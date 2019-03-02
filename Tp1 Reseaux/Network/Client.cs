@@ -71,7 +71,7 @@ namespace Tp1_Reseaux
 		/// <summary>
 		/// Method used to close the connexion with the Server
 		/// </summary>
-		private void CloseClient()
+		public void CloseClient()
 		{
 			Reader.Close();
 			Writer.Close();

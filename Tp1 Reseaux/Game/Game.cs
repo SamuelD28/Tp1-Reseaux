@@ -3,9 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using static System.Console;
 using System.IO;
+using static Tp1_Reseaux.Draw;
 
 namespace Tp1_Reseaux
 {
+	/// <summary>
+	/// Enumeration for the different a state can be in
+	/// </summary>
+	public enum GameState
+	{
+		Setup,
+		Ready,
+		Launching,
+		Placing_Boat,
+		Victory,
+		Defeat,
+		Error,
+		My_Turn,
+		Waiting,
+		Restart
+	}
+
 	public sealed class Game
 	{
 		//Default ip adress used if no ip adress is provided by the user
@@ -14,34 +32,22 @@ namespace Tp1_Reseaux
 		//Default port number used if no port number is provided by the user
 		public static readonly int DEFAULT_PORT = 8888;
 
-		/// <summary>
-		/// Enumeration for the different a state can be in
-		/// </summary>
-		public enum GameState
-		{
-			Setup,
-			Ready,
-			Launching,
-			Placing_Boat,
-			Victory,
-			Defeat,
-			Error,
-			My_Turn,
-			Waiting,
-			Restart
-		}
-
 		//Contains the client instance used for communication with the server
 		private Client Client = Client.GetInstance();
 
+		//Contains the list of all the shot the player did so far.
 		private List<Shot> MyShotHistory = new List<Shot>();
 
+		//Contains the list of all the shot made by the opponent
 		private List<Shot> OpponentShotHistory = new List<Shot>();
 
+		//Contains the boats and shots made by the opponent
 		private Grid GameGrid = new Grid();
 
+		//Grid used to display the shot made by the player
 		private Grid ShootingGrid = new Grid();
 
+		//Contains the list of all the boats available to the player
 		private static readonly List<Boat> Boats = new List<Boat>() {
 				new Boat(BoatType.AircraftCarrier),
 				new Boat(BoatType.Destroyer),
@@ -50,7 +56,7 @@ namespace Tp1_Reseaux
 				new Boat(BoatType.CounterTorpedo)
 		};
 
-		//USED ONLY FOR TESTING PURPOSE. Will be removed in production
+		//USED ONLY FOR TESTING PURPOSE. Default position for the boats.
 		private static readonly Position[,] SEED_Positions = new Position[,] {
 			{Position.Create("A1"), Position.Create("a5") },
 			{Position.Create("b1"), Position.Create("b4") },
@@ -68,6 +74,7 @@ namespace Tp1_Reseaux
 		//Contains the current port used for the connection by the client
 		public int CurrentPort { get; private set; }
 
+		//Used to skip the reading the server
 		private bool SkipServerResponse { get; set; }
 
 		//Contains the current state of the game
@@ -91,8 +98,6 @@ namespace Tp1_Reseaux
 			CurrentPort = DEFAULT_PORT;
 		}
 
-		//---Method for handling the game logic and flow--//
-
 		/// <summary>
 		/// Method used to retrieve the ip adress from the user
 		/// </summary>
@@ -106,7 +111,7 @@ namespace Tp1_Reseaux
 			else
 				CurrentIp = ipAdress;
 
-            Draw.DrawLog(ConsoleColor.DarkGreen, $"Using IP [{CurrentIp}]");
+			Draw.DrawLog(ConsoleColor.DarkGreen, $"Using IP [{CurrentIp}]");
 		}
 
 		/// <summary>
@@ -123,7 +128,7 @@ namespace Tp1_Reseaux
 			else
 				CurrentPort = portNumber;
 
-            Draw.DrawLog(ConsoleColor.DarkGreen, $"Using Port [{CurrentPort}]");
+			Draw.DrawLog(ConsoleColor.DarkGreen, $"Using Port [{CurrentPort}]");
 		}
 
 		/// <summary>
@@ -140,15 +145,15 @@ namespace Tp1_Reseaux
 				try
 				{
 					Client.Connect(CurrentIp, CurrentPort);
-                    Draw.DrawLog(ConsoleColor.DarkGreen, "Connected to the server");
+					Draw.DrawLog(ConsoleColor.DarkGreen, "Connected to the server");
 					CurrentPlayer = "J" + Client.Read();
-                    Draw.DrawLog(ConsoleColor.Blue, $"You are {CurrentPlayer}");
+					Draw.DrawLog(ConsoleColor.Blue, $"You are {CurrentPlayer}");
 					CurrentState = GameState.Ready;
 					break;
 				}
 				catch (Exception e)
 				{
-                    Draw.DrawLog(ConsoleColor.Red, $"Cant connect to the server.\n{e.Message}");
+					Draw.DrawLog(ConsoleColor.Red, $"Cant connect to the server.\n{e.Message}");
 				}
 			}
 		}
@@ -161,7 +166,7 @@ namespace Tp1_Reseaux
 		{
 			if (Client.IsOpen && CurrentState == GameState.Ready)
 			{
-                Draw.DrawLaunchMessage();
+				Draw.DrawLaunchMessage();
 				CurrentState = GameState.Placing_Boat;
 				Play();
 				return true;
@@ -179,7 +184,7 @@ namespace Tp1_Reseaux
 			while (Client.IsOpen || CurrentState == GameState.Restart)
 			{
 				Clear();
-                Draw.DrawBoard(CurrentPlayer.ToString(), GameGrid, ShootingGrid);
+				DrawBoard(CurrentPlayer, GameGrid, ShootingGrid);
 				try
 				{
 					switch (CurrentState)
@@ -190,7 +195,7 @@ namespace Tp1_Reseaux
 						case GameState.Victory: HandleVictory(); break;
 						case GameState.Defeat: HandleDefeat(); break;
 						case GameState.Restart: HandleRestart(); break;
-						case GameState.Error: break;
+						default: HandleWaiting(); break;
 					}
 					if (!SkipServerResponse)
 						ReadServerResponse();
@@ -200,106 +205,154 @@ namespace Tp1_Reseaux
 						SkipServerResponse = false;
 					}
 				}
-				catch (ServerResponseException e)
+				catch (ServerResponseException)
 				{
-                    //Handle the error...
-                    Draw.DrawLog(ConsoleColor.Red, "Error processing response from the server");
-					Console.ReadLine();
+					DrawLog(ConsoleColor.Red, "Error processing response from the server");
+					ReadLine();
 				}
-				catch (RequestMalformedException e)
+				catch (RequestMalformedException)
 				{
-                    //Handle the error...
-                    Draw.DrawLog(ConsoleColor.Red, "Error processing the request to the server");
-					Console.ReadLine();
+					DrawLog(ConsoleColor.Red, "Error processing the request to the server.");
+					ReadLine();
 				}
-				catch (TimeoutException e)
+				catch (TimeoutException)
 				{
-                    //Handle the error...
-                    Draw.DrawLog(ConsoleColor.Red, "Server could not respond in time");
+					HandleServerIssue("Server could not respond in time");
 				}
 				catch (IOException)
 				{
-                    Draw.DrawLog(ConsoleColor.Red, $"[{DateTime.Now}] Lost connection with the server");
-					Write("Would you like to reconnect? [Y/N] : ");
-					char answer = ReadKey().KeyChar;
-
-					if (Char.ToUpper(answer) == 'Y')
-						CurrentState = GameState.Restart;
+					HandleServerIssue("Lost Connection with the server");
 				}
 			}
-		}
-		//---God Method that handle different game state--//
 
+			HandleClose();
+		}
+
+		/// <summary>
+		/// Method for handling the closing of the game client
+		/// </summary>
+		private void HandleClose()
+		{
+			DrawLog(ConsoleColor.Yellow, $"\n[{DateTime.Now}] Game closed.");
+		}
+
+		/// <summary>
+		/// method for handling an issue from the server.
+		/// </summary>
+		/// <param name="message"></param>
+		private void HandleServerIssue(string message)
+		{
+			DrawLog(ConsoleColor.Red, $"[{DateTime.Now}] {message}");
+			Write($"[{DateTime.Now}] Would you like to reconnect? [Y/N] : ");
+			char answer = ReadKey().KeyChar;
+
+			if (Char.ToUpper(answer) == 'Y')
+				CurrentState = GameState.Restart;
+		}
+
+		/// <summary>
+		/// Handler method for restrating the game. We can preserve the boats placement
+		/// by not the shots.
+		/// </summary>
 		private void HandleRestart()
 		{
+			MyShotHistory.Clear();
+			OpponentShotHistory.Clear();
 			Setup();
 			Start();
 		}
 
+		/// <summary>
+		/// Handler method for player turn. Retrieve and send a shot to the server
+		/// </summary>
 		private void HandleMyTurn()
 		{
 			Position position = GetPlayerShot();
 			Response response = SendShotToServer(position);
 		}
 
+		/// <summary>
+		/// Method tha handle the defeat of the player.
+		/// </summary>
 		private void HandleDefeat()
 		{
-            //Could do seomthing better
-            Draw.DrawInformationBox("YOU LOST", "", CurrentState.ToString());
-			WriteLine("Press a key to continue...");
+			DrawInformationBox("YOU LOST", "", CurrentState.ToString());
+			Environment.Exit(0);
 		}
 
+		/// <summary>
+		/// Method that handle the victory of the player
+		/// </summary>
 		private void HandleVictory()
 		{
-            //Could do something better
-            Draw.DrawInformationBox("YOU WON", "", CurrentState.ToString());
-			WriteLine("Press a key to continue...");
+			DrawInformationBox("YOU WON", "", CurrentState.ToString());
+			Environment.Exit(0);
 		}
 
+		/// <summary>
+		/// Method that handle the placement of the boats
+		/// </summary>
 		private void HandleBoatPlacement()
 		{
 			GetPlayerBoats();
 			SendBoatsToServer();
-			SkipServerResponse = true; //Nasty shit
+			SkipServerResponse = true;
 		}
 
+		/// <summary>
+		/// Method that handle the waiting state of the game
+		/// </summary>
 		private void HandleWaiting()
 		{
 			//Do a better handling
-			Draw.DrawInformationBox($"Wait your turn", "", CurrentState.ToString());
+			DrawInformationBox($"Wait your turn", "", CurrentState.ToString());
 		}
 
-		//---Methods that send information to the server---//
-
+		/// <summary>
+		/// Method that send the complete list of boats to the server
+		/// </summary>
 		private void SendBoatsToServer()
 		{
 			foreach (IBoat boat in Boats)
 			{
-				//Send request to the server
-				Request.SetHeader(RequestType.Boat, boat.GetPlacement());
-				Client.Send(Request.Message);
+				try
+				{
+					//Send request to the server
+					Request.SetHeader(RequestType.Boat, boat.GetPlacement());
+					Client.Send(Request.Message);
 
-				//Read response from the server
-				Response response = Request.ParseResponse(Client.Read());
-				//Do a better handling of the request
-				if (!response.Success)
-					Draw.DrawLog(ConsoleColor.Red, response.Error);
-
+					//Read response from the server
+					Response response = Request.ParseResponse(Client.Read());
+					//Do a better handling of the request
+					if (!response.Success)
+						Draw.DrawLog(ConsoleColor.Red, response.Error);
+				}
+				catch(BoatNotPlacedException b)
+				{
+					DrawLog(ConsoleColor.Red, $"The boat {b.GetType()} is not placed. Be sure to place all the boats.");
+				}
 			}
 		}
 
+		/// <summary>
+		/// Method that send a shot to the server.
+		/// </summary>
+		/// <param name="position">Coordinate of the shot</param>
+		/// <returns>Response object containing the parsed response from the server.</returns>
 		private Response SendShotToServer(Position position)
 		{
 			//Send request to the server
 			Request.SetHeader(RequestType.Shot, position.ToString());
 			Client.Send(Request.Message);
 
-			//Read the response from the server. Have no choice otherwise the order is messed up
+			//Read the response from the server. 
 			Response response = Request.ParseResponse(Client.Read());
+
 			//Do a better handling of the response in case of an error.
 			if (!response.Success)
-				Draw.DrawLog(ConsoleColor.Red, response.Error);
+				DrawLog(ConsoleColor.Red, response.Error);
 
+			//Read the shot result and do the proper action
 			if (response.ShotResult == ShotResult.Hit)
 				AddShotToMyHistory(new Shot(position, ShotResult.Hit));
 			else if (response.ShotResult == ShotResult.Missed)
@@ -313,9 +366,12 @@ namespace Tp1_Reseaux
 			return response;
 		}
 
-		//---Methods that get information from the player---//
-
-		private Position GetPlayerPosition(string message)
+		/// <summary>
+		/// Method that retrieve the shot coordinate from the player
+		/// </summary>
+		/// <param name="message"></param>
+		/// <returns></returns>
+		private Position GetShotPosition(string message)
 		{
 			Position position = null;
 			while (position is null)
@@ -326,9 +382,10 @@ namespace Tp1_Reseaux
 				if (position is null)
 					WriteLine("Incorrect position. (Format [A-J][1-9][1-9])");
 
+				//Check if the shot was already made
 				if (MyShotHistory.FindIndex(s => s.Position.Equals(position)) != -1)
 				{
-					DrawLog(ConsoleColor.DarkRed, "You already shot at this position");
+					Draw.DrawLog(ConsoleColor.DarkRed, "You already shot at this position");
 					position = null;
 				}
 			}
@@ -347,15 +404,15 @@ namespace Tp1_Reseaux
 				Draw.DrawBoard(CurrentPlayer.ToString(), GameGrid, ShootingGrid);
 
 				Boat boat = Boats.Find(b => !b.IsPlaced);
-				Draw.DrawInformationBox($"Placing : {boat.Type.ToString()}", 
-                                        $"Length : {boat.LifePoints}", 
-                                         CurrentState.ToString());
+				Draw.DrawInformationBox($"Placing : {boat.Type.ToString()}",
+										$"Length : {boat.LifePoints}",
+										 CurrentState.ToString());
 
 				//----Used for testing purposes only-----//
 				if (UseDefaultPlacements()) break;
 
-				Position firstPosition = GetPlayerPosition("Enter First Coordinate : ");
-				Position secondPosition = GetPlayerPosition("Enter Second Coordinate : ");
+				Position firstPosition = GetShotPosition("Enter First Coordinate : ");
+				Position secondPosition = GetShotPosition("Enter Second Coordinate : ");
 
 				if (GameGrid.AddBoat(boat, firstPosition, secondPosition))
 					boat.AssignPlacement(firstPosition, secondPosition);
@@ -373,13 +430,14 @@ namespace Tp1_Reseaux
 			Draw.DrawInformationBox(
 				$"Your last shot : {(lastShotPlayerOne != null ? lastShotPlayerOne.ToString() : "No shot yet")}",
 				$"Opponent last shot : {(lastShotPlayerTwo != null ? lastShotPlayerTwo.ToString() : "No shot yet")}",
-                CurrentState.ToString());
+				CurrentState.ToString());
 
-			return GetPlayerPosition("Enter Shooting Coordinate : ");
+			return GetShotPosition("Enter Shooting Coordinate : ");
 		}
 
-		//---Methods that retrieve information from the server--//
-
+		/// <summary>
+		/// Method that determine the server response and pass it to the proper handler.
+		/// </summary>
 		private void ReadServerResponse()
 		{
 			string serverResponse = Client.Read();
@@ -392,6 +450,10 @@ namespace Tp1_Reseaux
 			}
 		}
 
+		/// <summary>
+		/// Method that read the turn send by the server
+		/// </summary>
+		/// <param name="serverResponse"></param>
 		private void GetServerTurn(string serverResponse = null)
 		{
 			Request.SetHeader(RequestType.Turn);
@@ -409,6 +471,10 @@ namespace Tp1_Reseaux
 				CurrentState = GameState.Waiting;
 		}
 
+		/// <summary>
+		/// Method that read the player shot send by the server
+		/// </summary>
+		/// <param name="serverResponse"></param>
 		private void GetServerShot(string serverResponse = null)
 		{
 			Request.SetHeader(RequestType.Shot);
@@ -426,6 +492,10 @@ namespace Tp1_Reseaux
 			AddShotToOpponentHistory(shot);
 		}
 
+		/// <summary>
+		/// Method that read the game result send by the server
+		/// </summary>
+		/// <param name="serverResponse"></param>
 		private void GetServerGameResult(string serverResponse = null)
 		{
 			Request.SetHeader(RequestType.Won);
@@ -442,6 +512,10 @@ namespace Tp1_Reseaux
 				CurrentState = GameState.Defeat;
 		}
 
+		/// <summary>
+		/// Testing method for placing all the boat at default position
+		/// </summary>
+		/// <returns></returns>
 		private bool UseDefaultPlacements()
 		{
 			Write("Would you like all boats to be placed in defaults positions? [Y/N]");
@@ -449,7 +523,7 @@ namespace Tp1_Reseaux
 
 			if (response.Length > 0 && char.ToUpper(response[0]) == 'Y')
 			{
-				Draw.DrawLog(ConsoleColor.DarkGreen, "Placing boats...");
+				Draw.DrawLog(ConsoleColor.DarkGreen, $"[{DateTime.Now}] Placing boats...");
 				for (int i = 0; i < Boats.Count; i++)
 				{
 					GameGrid.AddBoat(Boats[i], SEED_Positions[i, 0], SEED_Positions[i, 1]);
@@ -461,14 +535,20 @@ namespace Tp1_Reseaux
 				return false;
 		}
 
-  		//---Various other methods used by the class---//
-
+		/// <summary>
+		/// Add a shot made by the player to the history
+		/// </summary>
+		/// <param name="shot"></param>
 		private void AddShotToMyHistory(Shot shot)
 		{
 			MyShotHistory.Add(shot);
 			ShootingGrid.AddShot(shot);
 		}
 
+		/// <summary>
+		/// Add a shot made by the opponent to the history
+		/// </summary>
+		/// <param name="shot"></param>
 		private void AddShotToOpponentHistory(Shot shot)
 		{
 			OpponentShotHistory.Add(shot);

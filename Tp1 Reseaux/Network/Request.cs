@@ -12,6 +12,7 @@ namespace Tp1_Reseaux
 		Boat,
 		Turn,
 		Won,
+		Lost,
 		Wait,
 		Error
 	}
@@ -49,6 +50,8 @@ namespace Tp1_Reseaux
 				return RequestType.Turn;
 			else if (message.EndsWith("WIN"))
 				return RequestType.Won;
+			else if (message.EndsWith("LOST"))
+				return RequestType.Lost;
 			else if (message.Length > 10)
 				return RequestType.Error;
 			else

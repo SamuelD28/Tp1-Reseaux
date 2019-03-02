@@ -4,6 +4,9 @@ using static System.Console;
 
 namespace Tp1_Reseaux
 {
+	/// <summary>
+	/// Class that contains method used to draw inside the console
+	/// </summary>
     public static class Draw
     {
         /// <summary>
