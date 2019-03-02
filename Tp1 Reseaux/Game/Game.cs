@@ -325,6 +325,12 @@ namespace Tp1_Reseaux
 
 				if (position is null)
 					WriteLine("Incorrect position. (Format [A-J][1-9][1-9])");
+
+				if (MyShotHistory.FindIndex(s => s.Position.Equals(position)) != -1)
+				{
+					DrawLog(ConsoleColor.DarkRed, "You already shot at this position");
+					position = null;
+				}
 			}
 			return position;
 		}
@@ -368,7 +374,6 @@ namespace Tp1_Reseaux
 
 			return GetPlayerPosition("Enter Shooting Coordinate : ");
 		}
-
 
 		//---Methods that retrieve information from the server--//
 
